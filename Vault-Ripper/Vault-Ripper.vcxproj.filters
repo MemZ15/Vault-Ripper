@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Driver Files">
+      <UniqueIdentifier>{8E41214B-6785-4CFE-B992-037D68949A14}</UniqueIdentifier>
+      <Extensions>inf;inv;inx;mof;mc;</Extensions>
+    </Filter>
+    <Filter Include="Source Files\main">
+      <UniqueIdentifier>{047d82b4-269e-4c42-be88-3bd55e7d1de6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules">
+      <UniqueIdentifier>{1c0d7543-5a7d-45c3-ae02-4e39b5fe8346}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\helpers">
+      <UniqueIdentifier>{11282af3-4d2a-45f7-86ad-5f961a479c5c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\main">
+      <UniqueIdentifier>{cdef0d54-ac35-4fac-8182-5a611961ea01}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\helpers">
+      <UniqueIdentifier>{61eed230-c6ea-4916-8edd-2440d4fd33c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules">
+      <UniqueIdentifier>{ba222ab6-bbb9-4fd7-8351-ffa715d74938}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\main\nt_structs">
+      <UniqueIdentifier>{29920e12-8057-4366-be69-8dface812c1d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\hooks">
+      <UniqueIdentifier>{7d079d25-65e8-4370-ac68-dd8b3add7c42}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\hooks">
+      <UniqueIdentifier>{01e95b1f-753a-4a32-9996-d149bed0619e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\hooks\obj%27s">
+      <UniqueIdentifier>{04e5524b-aebf-4692-80f1-cc8fc0d4f598}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\AV">
+      <UniqueIdentifier>{35642850-41cc-43db-b0e4-6400272809ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\obj%27s">
+      <UniqueIdentifier>{5bc3895b-b929-4674-be6e-327c4b40d99e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Inf Include="Vault-Ripper.inf">
+      <Filter>Driver Files</Filter>
+    </Inf>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="entry.cpp">
+      <Filter>Source Files\main</Filter>
+    </ClCompile>
+    <ClCompile Include="modules.cpp">
+      <Filter>Source Files\modules</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers.cpp">
+      <Filter>Source Files\helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="hooks.cpp">
+      <Filter>Source Files\modules\hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="process.cpp">
+      <Filter>Source Files\modules\hooks\obj%27s</Filter>
+    </ClCompile>
+    <ClCompile Include="av.cpp">
+      <Filter>Source Files\modules\AV</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="includes.h">
+      <Filter>Header Files\main</Filter>
+    </ClInclude>
+    <ClInclude Include="log.h">
+      <Filter>Header Files\helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="modules.h">
+      <Filter>Header Files\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="nt_structs.h">
+      <Filter>Header Files\main\nt_structs</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers.h">
+      <Filter>Header Files\helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks.h">
+      <Filter>Header Files\modules\hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="object_init_table.h">
+      <Filter>Header Files\modules\obj%27s</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

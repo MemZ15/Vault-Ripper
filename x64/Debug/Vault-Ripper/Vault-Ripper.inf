@@ -1,0 +1,62 @@
+;
+; Vault-Ripper.inf
+;
+
+[Version]
+Signature   = "$WINDOWS NT$"
+Class       = System ; TODO: specify appropriate Class
+ClassGuid   = {4d36e97d-e325-11ce-bfc1-08002be10318} ; TODO: specify appropriate ClassGuid
+Provider    = %ManufacturerName%
+CatalogFile = Vault-Ripper.cat
+DriverVer = 05/29/2025,0.30.59.737
+PnpLockdown = 1
+
+[DestinationDirs]
+DefaultDestDir = 13
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+Vault-Ripper.sys = 1,,
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName% = Standard,NTamd64.10.0...16299 ; %13% support introduced in build 16299
+
+[Standard.NTamd64.10.0...16299]
+%Vault-Ripper.DeviceDesc% = Vault-Ripper_Device, Root\Vault-Ripper ; TODO: edit hw-id
+
+[Vault-Ripper_Device.NT]
+CopyFiles = File_Copy
+
+[File_Copy]
+Vault-Ripper.sys
+
+;-------------- Service installation
+[Vault-Ripper_Device.NT.Services]
+AddService = Vault-Ripper,%SPSVCINST_ASSOCSERVICE%, Vault-Ripper_Service_Inst
+
+; -------------- Vault-Ripper driver install sections
+[Vault-Ripper_Service_Inst]
+DisplayName    = %Vault-Ripper.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %13%\Vault-Ripper.sys
+
+[Vault-Ripper_Device.NT.Wdf]
+KmdfService = Vault-Ripper, Vault-Ripper_wdfsect
+
+[Vault-Ripper_wdfsect]
+KmdfLibraryVersion = 1.15
+
+[Strings]
+SPSVCINST_ASSOCSERVICE = 0x00000002
+ManufacturerName = "<Your manufacturer name>" ;TODO: Replace with your manufacturer name
+DiskName = "Vault-Ripper Installation Disk"
+Vault-Ripper.DeviceDesc = "Vault-Ripper Device"
+Vault-Ripper.SVCDESC = "Vault-Ripper Service"
