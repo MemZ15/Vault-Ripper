@@ -32,8 +32,6 @@ namespace hooks {
 
     object_type* capture_initalizer_table( uintptr_t base, size_t size, pointer_table& table_handle, void* obj, bool should_hook );
 
-    object_type* get_obj_type( void* obj );
-
 }
 
 namespace AV {

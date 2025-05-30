@@ -43,25 +43,7 @@ void hooks::hook_win_API( uintptr_t base, size_t size, func_pointer_table &table
 
 
 
-object_type* hooks::get_obj_type( void* object ) {
 
-	auto ob_type_index_table_base = globals::table;
-
-	_OBJECT_HEADER* obj_header = reinterpret_cast< _OBJECT_HEADER* >( reinterpret_cast< uint8_t* >( object ) - sizeof( _OBJECT_HEADER ) );
-	auto type_index = obj_header->TypeIndex;
-
-	auto ob_type_index_table = reinterpret_cast< object_type** >( ob_type_index_table_base );
-
-	for ( unsigned char index = 3; index <= 125; ++index ) {
-		auto entry = ob_type_index_table[type_index];
-		++type_index;
-
-		if ( entry )
-			return entry;
-	}
-
-	return nullptr;
-}
 
 object_type* hooks::capture_initalizer_table( uintptr_t base, size_t size, pointer_table& table_handle, void* obj, bool should_hook )
 {
