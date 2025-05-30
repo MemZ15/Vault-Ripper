@@ -1,4 +1,4 @@
-# 🧬 Kernel Manipulation Toolkit (KMT)
+# 🧬 VRF (sys.rootkit.vault-ripper) (VR)
 
 A precision-focused Windows kernel manipulation framework designed for controlled environments, red team operations, or research into EDR evasion, kernel API resolution, and security subsystem disruption.
 
@@ -8,7 +8,7 @@ A precision-focused Windows kernel manipulation framework designed for controlle
 
 ## 🚀 Overview
 
-KMT leverages low-level techniques to interact with and manipulate core kernel components without relying on standard (and often monitored) API calls. The framework supports:
+VRF leverages low-level techniques to interact with and manipulate core kernel components without relying on standard (and often monitored) API calls. The framework supports:
 
 - Kernel base resolution via IDT (no module enumeration)
 - Export table parsing and AOB scanning
