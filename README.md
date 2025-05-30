@@ -1,26 +1,84 @@
-🔧 Kernel-Level AV Evasion & Process Interception Framework
-This project is a kernel-mode driver designed for fast-acting detection and neutralization of anti-tamper and security software. It leverages deep Windows internals — including PsOpenProcess, the Object Type Initializer Table, and low-level manipulation of process structures — to intercept, deny access, or terminate target processes without relying on user-mode APIs or standard kernel routines that are easily hooked or monitored.
+# 🧬 Kernel Manipulation Toolkit (KMT)
 
-🧠 Key Features
-Direct Object Type Table Hooks: Intercepts access to PROCESS and DEVICE object types at the kernel level by modifying the Object Type Initializer Table.
+A precision-focused Windows kernel manipulation framework designed for controlled environments, red team operations, or research into EDR evasion, kernel API resolution, and security subsystem disruption.
 
-Process Filtering by Executable Name: Uses SeLocateProcessImageName to filter targets by full process path and apply enforcement policies.
+> ⚠️ This project is provided for educational and research purposes only. Running or deploying this on systems without explicit authorization violates laws and ethical guidelines.
 
-Termination Without API: Kills or neuters protected processes (e.g., Malwarebytes.exe, MsMpEng.exe) without calling ZwTerminateProcess or other monitored APIs.
+---
 
-Audit-Proof Enforcement: Uses low-level mechanisms to avoid triggering ETW, audit logs, or user-mode AV hooks.
+## 🚀 Overview
 
-IDT-Based Kernel Locating: Utilizes the Interrupt Descriptor Table (IDT) page to locate the base address of ntoskrnl.exe, allowing full relocation-free operation even in ASLR-hardened environments.
+KMT leverages low-level techniques to interact with and manipulate core kernel components without relying on standard (and often monitored) API calls. The framework supports:
 
-🕳️ Use Cases
-Red-teaming & security research.
+- Kernel base resolution via IDT (no module enumeration)
+- Export table parsing and AOB scanning
+- Runtime pointer resolution
+- `DRIVER_OBJECT` spoofing for EDR decoys
+- Temporary object initializer table hooking to disable AV/runtime callbacks
 
-AV/EDR evasion simulation.
+---
 
-Custom hypervisor or stealth kernel tool foundations.
+## 🧠 Features & Modules
 
-Teaching tool for Windows kernel internals.
+### 🔹 IDT-Based NTOSKRNL Base Discovery
 
-⚠️ Disclaimer
-This tool is for educational and research purposes only. Unauthorized deployment or use against systems you do not own or have explicit permission to interact with may be illegal.
+- **Function**: `modules::throw_idt_exception`
+- Leverages `sidt` instruction, and an exception trap to resolve `ntoskrnl.exe` base
+- Does not rely on `PsLoadedModuleList` or `ZwQuerySystemInformation`
+- Bypasses common AV heuristics
 
+---
+
+### 📦 Export Table Parsing & AOB Scanning
+
+- **Function**: `hooks::hook_win_API`
+- Extracts addresses of both exported and internal (non-exported) kernel functions
+- Supports pattern-based resolution (with wildcards) for stealth or undocumented targets
+- Saves resolved pointers to `func_pointer_table` for fast dynamic access
+
+---
+
+### 🧿 Legitimate Driver Object Cloning
+
+- **Function**: `modules::get_driver_object`
+- Finds and references a known Windows driver (e.g., `spaceport.sys`)
+- Pulls real metadata to spoof a new `DRIVER_OBJECT`
+
+---
+
+### Decoy `DRIVER_OBJECT` Allocation
+
+- **Function**: `modules::AllocateFakeDriverObject`
+- Allocates a kernel-resident dummy `DRIVER_OBJECT` with copied internals
+- Used to spoof AV / EDR integrity checks
+- Supports safe deallocation (`DeallocateFakeDriverObject`)
+
+---
+
+### ⚔️ Object Initializer Table Hooking
+
+- **Function**: `hooks::capture_initalizer_table`
+- Hooks internal kernel routines responsible for object creation:
+  - `PsProcessType`
+  - `PsThreadType`
+  - `IoDriverObjectType`
+- Intercepts AV callbacks tied to policy enforcement
+- Used temporarily during a specific window to suppress or redirect runtime behavior
+
+---
+
+## ⚠️ Disclaimer
+
+This project is **not** intended for malicious use. It exists to:
+
+- Educate on Windows kernel internals
+- Explore advanced detection and mitigation strategies
+- Provide tooling for responsible researchers and red teams in isolated lab environments
+
+Always test in VMs. Never deploy to production machines or networks you do not own or have explicit permission to test.
+
+---
+
+## 🧪 Author Notes
+
+WIP
