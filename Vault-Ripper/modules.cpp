@@ -69,14 +69,14 @@ PDRIVER_OBJECT modules::AllocateFakeDriverObject( PDRIVER_OBJECT targetDriver, P
     RtlZeroMemory( fakeDriver, sizeof( DRIVER_OBJECT ) );
 
     // Copy metadata
-    fakeDriver->Type = 0x04;
-    fakeDriver->Size = sizeof( DRIVER_OBJECT );
-    fakeDriver->DriverInit = targetDriver->DriverInit;
-    fakeDriver->DriverStart = targetDriver->DriverStart;
-    fakeDriver->DriverSize = targetDriver->DriverSize;
-    fakeDriver->DriverUnload = targetDriver->DriverUnload;
-    fakeDriver->DriverSection = targetDriver->DriverSection;
-    fakeDriver->FastIoDispatch = targetDriver->FastIoDispatch;
+    fakeDriver->Type           =    0x04;
+    fakeDriver->Size           =    sizeof( DRIVER_OBJECT );
+    fakeDriver->DriverInit     =    targetDriver->DriverInit;
+    fakeDriver->DriverStart    =    targetDriver->DriverStart;
+    fakeDriver->DriverSize     =    targetDriver->DriverSize;
+    fakeDriver->DriverUnload   =    targetDriver->DriverUnload;
+    fakeDriver->DriverSection  =    targetDriver->DriverSection;
+    fakeDriver->FastIoDispatch =    targetDriver->FastIoDispatch;
 
     // Set name
     const wchar_t* name = L"\\Driver\\FileScanner";
