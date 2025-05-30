@@ -18,6 +18,8 @@ extern "C" NTSTATUS DriverEntry() {
 
 		PDRIVER_OBJECT tar_obj{};
 
+		PDRIVER_OBJECT fakeDriver{};
+
 		size_t size{};
 
 		// Init Funcion Pointer Table
@@ -33,7 +35,7 @@ extern "C" NTSTATUS DriverEntry() {
 		modules::get_driver_object( L"\\Driver\\spaceport", tar_obj, table_handle );
 
 		// Create the Fake Driver Object purely to be used as a decoy
-		PDRIVER_OBJECT fake_obj = modules::AllocateFakeDriverObject( tar_obj );
+		PDRIVER_OBJECT fake_obj = modules::AllocateFakeDriverObject( tar_obj, fakeDriver );
 
 		//Hook obj initializers in preperation for AV check
 		hooks::capture_initalizer_table( base, size, table_handle, obj, 1 );

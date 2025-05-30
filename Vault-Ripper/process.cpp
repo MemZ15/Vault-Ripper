@@ -15,7 +15,6 @@ NTSTATUS __fastcall object_type_init_hooks::hk_process_open_procedure( e_ob_open
 
 
     if ( open_reason == e_ob_open_reason::ob_create_handle || open_reason == e_ob_open_reason::ob_duplicate_handle || open_reason == e_ob_open_reason::ob_open_handle ) {
-        
         if ( AV::process_extraction( object_body, L"MBAMService.exe" ) ) { // Gonna require an array of AV based processes
             return STATUS_ACCESS_DISABLED_BY_POLICY_DEFAULT;
         }

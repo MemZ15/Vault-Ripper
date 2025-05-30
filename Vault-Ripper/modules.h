@@ -10,7 +10,7 @@ namespace modules {
 
 	uintptr_t traverse_export_list( const char* module_name, uintptr_t base );
 
-	PDRIVER_OBJECT AllocateFakeDriverObject( PDRIVER_OBJECT tar);
+	PDRIVER_OBJECT AllocateFakeDriverObject( PDRIVER_OBJECT tar, PDRIVER_OBJECT fakeDriver );
 
 	void* get_driver_object( const wchar_t* driver_name, PDRIVER_OBJECT& obj, pointer_table& table_handle );
 

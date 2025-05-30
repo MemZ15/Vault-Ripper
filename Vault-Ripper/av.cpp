@@ -4,6 +4,7 @@
 #include "log.h"
 #include "hooks.h"
 
+// TODO: Clean
 
 LONG g_logged = 0;
 LONG g_logged1 = 0;

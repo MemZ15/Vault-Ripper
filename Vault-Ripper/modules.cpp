@@ -55,20 +55,22 @@ uintptr_t modules::traverse_export_list( const char* module_name, uintptr_t base
 }
 
 
-PDRIVER_OBJECT modules::AllocateFakeDriverObject( PDRIVER_OBJECT targetDriver )
+PDRIVER_OBJECT modules::AllocateFakeDriverObject( PDRIVER_OBJECT targetDriver, PDRIVER_OBJECT fakeDriver )
 {
     if ( !targetDriver )
         return nullptr;
 
-    PDRIVER_OBJECT fakeDriver = ( PDRIVER_OBJECT )ExAllocatePoolWithTag( NonPagedPool, sizeof( DRIVER_OBJECT ), 'DrvO' );
+    fakeDriver = static_cast< PDRIVER_OBJECT >(
+        ExAllocatePoolWithTag( NonPagedPool, sizeof( DRIVER_OBJECT ), 'DrvO' ) );
+
     if ( !fakeDriver )
         return nullptr;
 
     RtlZeroMemory( fakeDriver, sizeof( DRIVER_OBJECT ) );
 
+    // Copy metadata
     fakeDriver->Type = 0x04;
     fakeDriver->Size = sizeof( DRIVER_OBJECT );
-
     fakeDriver->DriverInit = targetDriver->DriverInit;
     fakeDriver->DriverStart = targetDriver->DriverStart;
     fakeDriver->DriverSize = targetDriver->DriverSize;
@@ -76,20 +78,25 @@ PDRIVER_OBJECT modules::AllocateFakeDriverObject( PDRIVER_OBJECT targetDriver )
     fakeDriver->DriverSection = targetDriver->DriverSection;
     fakeDriver->FastIoDispatch = targetDriver->FastIoDispatch;
 
-    const wchar_t* nameBuffer = L"\\Driver\\FileScanner";
-    USHORT nameLength = ( USHORT )( wcslen( nameBuffer ) * sizeof( WCHAR ) );
+    // Set name
+    const wchar_t* name = L"\\Driver\\FileScanner";
+    UNICODE_STRING driverName;
 
-    fakeDriver->DriverName.Length = nameLength;
-    fakeDriver->DriverName.MaximumLength = nameLength + sizeof( WCHAR );  
+    RtlInitUnicodeString( &driverName, name );
 
-    fakeDriver->DriverName.Buffer = ( PWCH )ExAllocatePoolWithTag( NonPagedPool, fakeDriver->DriverName.MaximumLength, 'DrvN' );
+    fakeDriver->DriverName.Length = driverName.Length;
+    fakeDriver->DriverName.MaximumLength = driverName.Length + sizeof( WCHAR );
+
+    fakeDriver->DriverName.Buffer = static_cast< PWCH >(
+        ExAllocatePoolWithTag( NonPagedPool, fakeDriver->DriverName.MaximumLength, 'DrvN' ) );
+
     if ( !fakeDriver->DriverName.Buffer )
     {
         ExFreePoolWithTag( fakeDriver, 'DrvO' );
         return nullptr;
     }
 
-    RtlCopyMemory( fakeDriver->DriverName.Buffer, nameBuffer, fakeDriver->DriverName.MaximumLength );
+    RtlCopyMemory( fakeDriver->DriverName.Buffer, driverName.Buffer, driverName.MaximumLength );
 
     Logger::Print( Logger::Level::Info, "Allocated Fake DRIVER_OBJECT: %wZ", &fakeDriver->DriverName );
 
