@@ -60,30 +60,24 @@ PDRIVER_OBJECT modules::AllocateFakeDriverObject( PDRIVER_OBJECT targetDriver )
     if ( !targetDriver )
         return nullptr;
 
-    // Allocate pool for DRIVER_OBJECT
     PDRIVER_OBJECT fakeDriver = ( PDRIVER_OBJECT )ExAllocatePoolWithTag( NonPagedPool, sizeof( DRIVER_OBJECT ), 'DrvO' );
     if ( !fakeDriver )
         return nullptr;
 
     RtlZeroMemory( fakeDriver, sizeof( DRIVER_OBJECT ) );
 
-    // Set basic required fields
-    fakeDriver->Type = 0x04; // IO_TYPE_DRIVER (verified in ntoskrnl)
+    fakeDriver->Type = 0x04; 
     fakeDriver->Size = sizeof( DRIVER_OBJECT );
 
-    // Copy function pointers from real driver, safer to keep behavior consistent
     fakeDriver->DriverInit = targetDriver->DriverInit;
     fakeDriver->DriverStart = targetDriver->DriverStart;
     fakeDriver->DriverSize = targetDriver->DriverSize;
-    fakeDriver->DriverUnload = targetDriver->DriverUnload; // safe if unload supported
+    fakeDriver->DriverUnload = targetDriver->DriverUnload; 
 
-    // Copy DriverSection (points to LDR_DATA_TABLE_ENTRY usually)
     fakeDriver->DriverSection = targetDriver->DriverSection;
 
-    // Copy FastIoDispatch if you want (optional)
     fakeDriver->FastIoDispatch = targetDriver->FastIoDispatch;
 
-    // Setup a properly allocated UNICODE_STRING for DriverName
     UNICODE_STRING driverName;
     RtlInitUnicodeString( &driverName, L"\\Driver\\FileScanner" );
 
