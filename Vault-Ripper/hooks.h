@@ -42,5 +42,5 @@ namespace AV {
 
     bool thread_extraction( PETHREAD thread, LPCWSTR target_name );
 
-
+    bool driver_name_extraction( DRIVER_OBJECT* driver_object, LPCWSTR target_filename );
 }

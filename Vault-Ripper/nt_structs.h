@@ -389,7 +389,7 @@ struct ob_type_hook_pair {
         okay_to_close_procedure_ty      o_okay_to_close_procedure;
     } process;
 
-    struct TokenHook {
+    struct DriverHook {
         dump_procedure_ty               o_dump_procedure;
         open_procedure_ty               o_open_procedure;
         close_procedure_ty              o_close_procedure;
@@ -398,7 +398,7 @@ struct ob_type_hook_pair {
         security_procedure_ty           o_security_procedure;
         query_name_procedure_ty         o_query_name_procedure;
         okay_to_close_procedure_ty      o_okay_to_close_procedure;
-    } token;
+    } driver;
 
     struct FileHook {
         dump_procedure_ty               o_dump_procedure;
@@ -446,7 +446,7 @@ struct ob_type_hook_pair {
     } thread;
 };
 
-extern ob_type_hook_pair hook_metadata, debug_object, process, device, file, token, callback, thread;
+extern ob_type_hook_pair hook_metadata, debug_object, process, device, file, token, callback, thread, driver;
 
 //0xa40 bytes (sizeof)
 struct _EPROCESS

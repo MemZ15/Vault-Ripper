@@ -14,6 +14,8 @@ namespace modules {
 
 	void* get_driver_object( const wchar_t* driver_name, PDRIVER_OBJECT& obj, pointer_table& table_handle );
 
+	void DeallocateFakeDriverObject( PDRIVER_OBJECT fakeDriver );
+
 }
 
 

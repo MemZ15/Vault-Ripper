@@ -66,24 +66,32 @@ PDRIVER_OBJECT modules::AllocateFakeDriverObject( PDRIVER_OBJECT targetDriver )
 
     RtlZeroMemory( fakeDriver, sizeof( DRIVER_OBJECT ) );
 
-    fakeDriver->Type = 0x04; 
+    fakeDriver->Type = 0x04;
     fakeDriver->Size = sizeof( DRIVER_OBJECT );
 
     fakeDriver->DriverInit = targetDriver->DriverInit;
     fakeDriver->DriverStart = targetDriver->DriverStart;
     fakeDriver->DriverSize = targetDriver->DriverSize;
-    fakeDriver->DriverUnload = targetDriver->DriverUnload; 
-
+    fakeDriver->DriverUnload = targetDriver->DriverUnload;
     fakeDriver->DriverSection = targetDriver->DriverSection;
-
     fakeDriver->FastIoDispatch = targetDriver->FastIoDispatch;
 
-    UNICODE_STRING driverName;
-    RtlInitUnicodeString( &driverName, L"\\Driver\\FileScanner" );
+    const wchar_t* nameBuffer = L"\\Driver\\FileScanner";
+    USHORT nameLength = ( USHORT )( wcslen( nameBuffer ) * sizeof( WCHAR ) );
 
-    fakeDriver->DriverName = driverName;
+    fakeDriver->DriverName.Length = nameLength;
+    fakeDriver->DriverName.MaximumLength = nameLength + sizeof( WCHAR );  
 
-    DbgPrint( "Allocated Fake DRIVER_OBJECT: %wZ\n", &fakeDriver->DriverName.Buffer );
+    fakeDriver->DriverName.Buffer = ( PWCH )ExAllocatePoolWithTag( NonPagedPool, fakeDriver->DriverName.MaximumLength, 'DrvN' );
+    if ( !fakeDriver->DriverName.Buffer )
+    {
+        ExFreePoolWithTag( fakeDriver, 'DrvO' );
+        return nullptr;
+    }
+
+    RtlCopyMemory( fakeDriver->DriverName.Buffer, nameBuffer, fakeDriver->DriverName.MaximumLength );
+
+    Logger::Print( Logger::Level::Info, "Allocated Fake DRIVER_OBJECT: %wZ", &fakeDriver->DriverName );
 
     return fakeDriver;
 }
@@ -97,18 +105,29 @@ void* modules::get_driver_object( const wchar_t* driver_name, PDRIVER_OBJECT& ob
 
     auto status = ObReferenceObjectByName( &driverName, OBJ_CASE_INSENSITIVE, nullptr, 0, *driver_type, KernelMode, nullptr, reinterpret_cast< PVOID* >( &obj ) );
 
-    if ( !NT_SUCCESS( status ) ) {
-        DbgPrint( "[ERROR] ObReferenceObjectByName failed: 0x%X\n", status );
+    if ( !NT_SUCCESS( status ) ) 
         return 0;
-    }
     
-    Logger::Print( Logger::Level::Info, "Spaceport Driver Object Found, and exposed for copying" );
+    Logger::Print( Logger::Level::Info, "Spaceport Driver DRIVER_OBJECT, Exposed For Copying" );
 
     return obj;
 }
 
 
+void modules::DeallocateFakeDriverObject( PDRIVER_OBJECT fakeDriver )
+{
+    if ( !fakeDriver )
+        return;
 
+    Logger::Print( Logger::Level::Info, "Deallocating Fake DRIVER_OBJECT: %wZ", &fakeDriver->DriverName );
+
+    if ( fakeDriver->DriverName.Buffer )
+    {
+        ExFreePoolWithTag( fakeDriver->DriverName.Buffer, 'DrvN' );
+    }
+
+    ExFreePoolWithTag( fakeDriver, 'DrvO' );
+}
 
 
 uintptr_t modules::find_base_from_exception( uintptr_t search_addr, size_t search_limit, uintptr_t& base, size_t& base_size ) {

@@ -117,6 +117,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="av.cpp" />
+    <ClCompile Include="driver.cpp" />
     <ClCompile Include="entry.cpp" />
     <ClCompile Include="helpers.cpp" />
     <ClCompile Include="hooks.cpp" />

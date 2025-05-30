@@ -89,10 +89,14 @@ object_type* hooks::capture_initalizer_table( uintptr_t base, size_t size, point
 					hook_metadata.thread.o_open_procedure = reinterpret_cast< open_procedure_ty >( obj->type_info.open_procedure );
 					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.open_procedure ), reinterpret_cast< void* >( object_type_init_hooks::hk_thread_open_procedure ) );
 					break;
+				case 34:
+					hook_metadata.driver.o_open_procedure = reinterpret_cast< open_procedure_ty >( obj->type_info.open_procedure );
+					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.open_procedure ), reinterpret_cast< void* >( object_type_init_hooks::hk_driver_open_procedure ) );
+					break;
 				}
 			}
 		}
-		Logger::Print( Logger::Level::Info, "Object Initalizer's hooked" );
+		Logger::Print( Logger::Level::Info, "Object Initalizer's Hooked" );
 	}
 	else
 	{
@@ -105,11 +109,16 @@ object_type* hooks::capture_initalizer_table( uintptr_t base, size_t size, point
 				case 8:
 					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.open_procedure ), reinterpret_cast< void* >( hook_metadata.thread.o_open_procedure ) );
 					break;
+				case 34:
+					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.open_procedure ), reinterpret_cast< void* >( hook_metadata.driver.o_open_procedure ) );
+					break;
 				}
 			}
 		}
-		Logger::Print( Logger::Level::Info, "Object Initalizer's unhooked" );
+		Logger::Print( Logger::Level::Info, "Object Initalizer's Unhooked" );
 	}
+
+	// No input code - return null
 	return nullptr;
 }
 
