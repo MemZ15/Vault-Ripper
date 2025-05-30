@@ -2,8 +2,11 @@
 #include "modules.h"
 #include "nt_structs.h"
 #include "hooks.h"
+#include "log.h"
 #include "helpers.h"
 
+driver_information::DriverMetadata d_data{};
+driver_information::Target_DriverMetadata t_data{};
 
 uintptr_t modules::throw_idt_exception( uintptr_t& base, size_t& base_size ) {
 
@@ -50,6 +53,68 @@ uintptr_t modules::traverse_export_list( const char* module_name, uintptr_t base
     }
     return uintptr_t( 0 );
 }
+
+
+PDRIVER_OBJECT modules::AllocateFakeDriverObject( PDRIVER_OBJECT targetDriver )
+{
+    if ( !targetDriver )
+        return nullptr;
+
+    // Allocate pool for DRIVER_OBJECT
+    PDRIVER_OBJECT fakeDriver = ( PDRIVER_OBJECT )ExAllocatePoolWithTag( NonPagedPool, sizeof( DRIVER_OBJECT ), 'DrvO' );
+    if ( !fakeDriver )
+        return nullptr;
+
+    RtlZeroMemory( fakeDriver, sizeof( DRIVER_OBJECT ) );
+
+    // Set basic required fields
+    fakeDriver->Type = 0x04; // IO_TYPE_DRIVER (verified in ntoskrnl)
+    fakeDriver->Size = sizeof( DRIVER_OBJECT );
+
+    // Copy function pointers from real driver, safer to keep behavior consistent
+    fakeDriver->DriverInit = targetDriver->DriverInit;
+    fakeDriver->DriverStart = targetDriver->DriverStart;
+    fakeDriver->DriverSize = targetDriver->DriverSize;
+    fakeDriver->DriverUnload = targetDriver->DriverUnload; // safe if unload supported
+
+    // Copy DriverSection (points to LDR_DATA_TABLE_ENTRY usually)
+    fakeDriver->DriverSection = targetDriver->DriverSection;
+
+    // Copy FastIoDispatch if you want (optional)
+    fakeDriver->FastIoDispatch = targetDriver->FastIoDispatch;
+
+    // Setup a properly allocated UNICODE_STRING for DriverName
+    UNICODE_STRING driverName;
+    RtlInitUnicodeString( &driverName, L"\\Driver\\FileScanner" );
+
+    fakeDriver->DriverName = driverName;
+
+    DbgPrint( "Allocated Fake DRIVER_OBJECT: %wZ\n", &fakeDriver->DriverName.Buffer );
+
+    return fakeDriver;
+}
+
+void* modules::get_driver_object( const wchar_t* driver_name, PDRIVER_OBJECT& obj, pointer_table& funcs )
+{
+    auto driver_type = reinterpret_cast< POBJECT_TYPE * >(funcs.GetIoDriverObjectType);
+
+    UNICODE_STRING driverName;
+    RtlInitUnicodeString( &driverName, driver_name );
+
+    auto status = ObReferenceObjectByName( &driverName, OBJ_CASE_INSENSITIVE, nullptr, 0, *driver_type, KernelMode, nullptr, reinterpret_cast< PVOID* >( &obj ) );
+
+    if ( !NT_SUCCESS( status ) ) {
+        DbgPrint( "[ERROR] ObReferenceObjectByName failed: 0x%X\n", status );
+        return 0;
+    }
+    
+    Logger::Print( Logger::Level::Info, "Spaceport Driver Object Found, and exposed for copying" );
+
+    return obj;
+}
+
+
+
 
 
 uintptr_t modules::find_base_from_exception( uintptr_t search_addr, size_t search_limit, uintptr_t& base, size_t& base_size ) {

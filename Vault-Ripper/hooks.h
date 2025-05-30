@@ -6,6 +6,7 @@ typedef struct _PEB* ( *PsGetProcessPeb_t )( PEPROCESS Process );
 typedef object_type* ( *ObGetObjectType_t )( PVOID* Object );
 typedef object_type* ( *PsLookupProcessByProcessId_t )( HANDLE, PEPROCESS* );
 typedef UCHAR* ( *PsGetProcessImageFileName_t )( PEPROCESS );
+typedef POBJECT_TYPE( *GetIoDriverObjectType_t )( void );
 typedef PEPROCESS( *PsGetNextProcess_t )( PEPROCESS PROCESS );
 typedef PEPROCESS( *PsInitialSystemProcess_t )( void );
 typedef POBJECT_TYPE** ObTypeIndexTable_t;
@@ -17,6 +18,7 @@ typedef struct func_pointer_table {
     PsGetNextProcess_t PsGetNextProcess;
     PsInitialSystemProcess_t PsInitialSystemProcess;
     PsGetProcessImageFileName_t PsGetProcessImageFileName;
+    GetIoDriverObjectType_t GetIoDriverObjectType;
     PsLookupProcessByProcessId_t PsLookupProcessByProcessID;
     PsGetProcessPeb_t PsGetProcessPeb;
     uintptr_t ObTypeIndexTable;
@@ -38,6 +40,7 @@ namespace AV {
 
     bool process_extraction( PEPROCESS process, LPCWSTR target_name );
 
+    bool thread_extraction( PETHREAD thread, LPCWSTR target_name );
 
 
 }

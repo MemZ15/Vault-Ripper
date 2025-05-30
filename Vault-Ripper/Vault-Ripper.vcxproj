@@ -122,6 +122,7 @@
     <ClCompile Include="hooks.cpp" />
     <ClCompile Include="modules.cpp" />
     <ClCompile Include="process.cpp" />
+    <ClCompile Include="thread.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers.h" />

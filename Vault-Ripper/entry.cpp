@@ -14,7 +14,9 @@ extern "C" NTSTATUS DriverEntry() {
 
 	uintptr_t base{};
 
-	object_type* obj = nullptr;
+	object_type* obj{ nullptr };
+
+	PDRIVER_OBJECT tar_obj{};
 
 	size_t size{};
 
@@ -27,12 +29,17 @@ extern "C" NTSTATUS DriverEntry() {
 	// Find and save pointer info for WIN-API functions
 	hooks::hook_win_API( base, size, table_handle );
 
+	// Find and expose a legit Windows driver to copy its metadata to our dummy
+	modules::get_driver_object( L"\\Driver\\spaceport", tar_obj, table_handle );
+
+	// Create the Fake Driver Object purely to be used as a decoy
+	PDRIVER_OBJECT fake_obj = modules::AllocateFakeDriverObject( tar_obj );
+
 	//Hook obj initializers in preperation for AV check
 	hooks::capture_initalizer_table( base, size, table_handle, obj, 1 );
-
-
+	
 	LARGE_INTEGER delay;
-	delay.QuadPart = -10 * 1000 * 1000 * 10;
+	delay.QuadPart = -10LL * 1000 * 1000 * 30; // 30 seconds
 	KeDelayExecutionThread( KernelMode, FALSE, &delay );
 
 	//Unook obj initializers in preperation for driver unload

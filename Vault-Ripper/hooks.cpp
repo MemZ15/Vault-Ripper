@@ -21,6 +21,9 @@ void hooks::hook_win_API( uintptr_t base, size_t size, func_pointer_table &table
 	table_handle.PsGetProcessImageFileName = ( PsGetProcessImageFileName_t )
 		modules::traverse_export_list( "PsGetProcessImageFileName", base );
 
+	table_handle.GetIoDriverObjectType = ( GetIoDriverObjectType_t )
+		modules::traverse_export_list( "IoDriverObjectType", base );
+
 	table_handle.PsGetNextProcess = ( PsGetNextProcess_t )
 		helpers::pattern_scan( base, size, patterns::PsGetNextProcessPattern, patterns::PsGetNextProcessMask );
 
@@ -82,6 +85,10 @@ object_type* hooks::capture_initalizer_table( uintptr_t base, size_t size, point
 					hook_metadata.process.o_open_procedure = reinterpret_cast< open_procedure_ty >( obj->type_info.open_procedure );
 					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.open_procedure ), reinterpret_cast< void* >( object_type_init_hooks::hk_process_open_procedure ) );
 					break;
+				case 8:
+					hook_metadata.thread.o_open_procedure = reinterpret_cast< open_procedure_ty >( obj->type_info.open_procedure );
+					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.open_procedure ), reinterpret_cast< void* >( object_type_init_hooks::hk_thread_open_procedure ) );
+					break;
 				}
 			}
 		}
@@ -95,16 +102,15 @@ object_type* hooks::capture_initalizer_table( uintptr_t base, size_t size, point
 				case 7:
 					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.open_procedure ), reinterpret_cast< void* >( hook_metadata.process.o_open_procedure ) );
 					break;
+				case 8:
+					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.open_procedure ), reinterpret_cast< void* >( hook_metadata.thread.o_open_procedure ) );
+					break;
 				}
 			}
 		}
-
-			Logger::Print( Logger::Level::Info, "Object Initalizer's unhooked" );
-
+		Logger::Print( Logger::Level::Info, "Object Initalizer's unhooked" );
 	}
-
 	return nullptr;
 }
 
 
-// TODO: Acually hook these functions

@@ -365,15 +365,6 @@ typedef struct object_type
 
 
 struct ob_type_hook_pair {
-    object_type* target_object;
-    dump_procedure_ty               o_dump_procedure;
-    open_procedure_ty               o_open_procedure;
-    close_procedure_ty              o_close_procedure;
-    delete_procedure_ty             o_delete_procedure;
-    parse_procedure_detail_ty       o_parse_procedure_detail;
-    security_procedure_ty           o_security_procedure;
-    query_name_procedure_ty         o_query_name_procedure;
-    okay_to_close_procedure_ty      o_okay_to_close_procedure;
 
     struct DeviceHook {
         dump_procedure_ty               o_dump_procedure;

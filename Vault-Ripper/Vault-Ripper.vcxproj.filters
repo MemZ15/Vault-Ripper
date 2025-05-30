@@ -78,6 +78,9 @@
     <ClCompile Include="av.cpp">
       <Filter>Source Files\modules\AV</Filter>
     </ClCompile>
+    <ClCompile Include="thread.cpp">
+      <Filter>Source Files\modules\hooks\obj%27s</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="includes.h">
