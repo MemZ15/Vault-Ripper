@@ -38,15 +38,14 @@ void hooks::hook_win_API( uintptr_t base, size_t size, func_pointer_table &table
 
 	globals::table = table_handle.ObTypeIndexTable;
 
-	Logger::Print( Logger::Level::Info, "table populated" );
+	Logger::Print( Logger::Level::Info, "Table Populated" );
 }
 
 
 
 
 
-object_type* hooks::capture_initalizer_table( uintptr_t base, size_t size, pointer_table& table_handle, void* obj, bool should_hook )
-{
+object_type* hooks::capture_initalizer_table( uintptr_t base, size_t size, pointer_table& table_handle, void* obj, bool should_hook ){
 	auto ob_type_index_table_base = table_handle.ObTypeIndexTable;
 
 	_OBJECT_HEADER* obj_header = reinterpret_cast< _OBJECT_HEADER* >( reinterpret_cast< uint8_t* >( obj ) - sizeof( _OBJECT_HEADER ) );
@@ -98,10 +97,10 @@ object_type* hooks::capture_initalizer_table( uintptr_t base, size_t size, point
 			}
 		}
 		Logger::Print( Logger::Level::Info, "Object Initalizer's Unhooked" );
-	}
 
-	// No input code - return null
-	return nullptr;
+		// No input code - return null
+		return nullptr;
+	}
 }
 
-
+	//FILE OBJECT needs to be hooked, and parsed

@@ -16,6 +16,8 @@ namespace modules {
 
 	void DeallocateFakeDriverObject( PDRIVER_OBJECT fakeDriver );
 
+	void scan_file_sys(uintptr_t base, size_t size, func_pointer_table table_handle);
+
 }
 
 

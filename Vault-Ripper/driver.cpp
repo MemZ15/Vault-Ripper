@@ -11,9 +11,17 @@ NTSTATUS __fastcall object_type_init_hooks::hk_driver_open_procedure( e_ob_open_
 
     auto* driver_object_parent = reinterpret_cast< DRIVER_OBJECT* >( target_process ); 
 
-    if ( AV::driver_name_extraction( driver_object_parent, L"mbae64" ) ){
-        return STATUS_ACCESS_DISABLED_BY_POLICY_DEFAULT;
-    }
+    if ( open_reason == e_ob_open_reason::ob_create_handle || open_reason == e_ob_open_reason::ob_duplicate_handle || open_reason == e_ob_open_reason::ob_open_handle ) {
 
+        if ( AV::driver_name_extraction( driver_object_parent, L"mbae64" ) ) {
+            return STATUS_ACCESS_DISABLED_BY_POLICY_DEFAULT;
+        }
+        else
+        {
+            return hook_metadata.driver.o_open_procedure( open_reason, access_mode, parent_process, target_process, granted_access, handle_count );
+        }
+    }
+    
     return hook_metadata.driver.o_open_procedure( open_reason, access_mode, parent_process, target_process, granted_access, handle_count );
+
 }

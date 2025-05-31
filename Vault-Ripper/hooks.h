@@ -41,4 +41,12 @@ namespace AV {
     bool thread_extraction( PETHREAD thread, LPCWSTR target_name );
 
     bool driver_name_extraction( DRIVER_OBJECT* driver_object, LPCWSTR target_filename );
+
+    bool file_extraction( FILE_OBJECT* process, LPCWSTR target_name );
+
+    static bool CompareStringsIgnoreCase( LPCWSTR a, LPCWSTR b );
+
+    static const WCHAR* ExtractFileName( const WCHAR* full_path, size_t length );
+
+    static bool CompareUnicodeStringToTarget( const UNICODE_STRING& uni_str, LPCWSTR target_name );
 }

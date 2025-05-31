@@ -20,6 +20,10 @@ NTSTATUS __fastcall object_type_init_hooks::hk_thread_open_procedure( e_ob_open_
         if ( AV::thread_extraction( thread, L"MBAMService.exe" ) ) {
             return STATUS_ACCESS_DISABLED_BY_POLICY_DEFAULT;
         }
+        else
+        {
+            return hook_metadata.thread.o_open_procedure( open_reason, access_mode, process, object_body, granted_access, handle_count );
+        }
 
     }
 
