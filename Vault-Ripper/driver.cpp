@@ -25,3 +25,5 @@ NTSTATUS __fastcall object_type_init_hooks::hk_driver_open_procedure( e_ob_open_
     return hook_metadata.driver.o_open_procedure( open_reason, access_mode, parent_process, target_process, granted_access, handle_count );
 
 }
+
+// 
