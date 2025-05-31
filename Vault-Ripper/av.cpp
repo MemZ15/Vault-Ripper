@@ -16,7 +16,7 @@ bool AV::process_extraction( PEPROCESS process, UINT64 target_hash ) {
 
     auto* full_path = process_image_name->Buffer;
 
-    size_t len = process_image_name->Length / sizeof( WCHAR );
+    size_t len = process_image_name->Length / sizeof( 2 );
 
     ExFreePool( process_image_name );
 
@@ -48,7 +48,7 @@ bool AV::thread_extraction( PETHREAD thread, UINT64 target_hash ) {
     if ( status || !process_image_name->Buffer )
         return false;
 
-    size_t len = process_image_name->Length / sizeof( WCHAR );
+    size_t len = process_image_name->Length / sizeof( 2 );
 
     auto* full_path = process_image_name->Buffer;
 
@@ -78,7 +78,7 @@ bool AV::driver_name_extraction( DRIVER_OBJECT* driver_object, UINT64 target_has
         return false;
 
     auto* full_path = driver_object->DriverName.Buffer;
-    size_t len = driver_object->DriverName.Length / sizeof( WCHAR );
+    size_t len = driver_object->DriverName.Length / sizeof( 2 );
 
     auto* filename_start = modules::FindFilenameStart( full_path, len );
 
