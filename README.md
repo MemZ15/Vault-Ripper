@@ -1,82 +1,75 @@
-# 🧬 Kernel Cloaking & Access Control Driver
+# 🧬 Kernel Cloaking & Access Interception Driver
 
-This kernel-mode driver implements low-level manipulation of the Windows object manager to enforce selective access denial and cloak kernel objects from inspection. It leverages runtime kernel introspection, salted hash matching, and object table hijacking to dynamically control visibility and access at the OS level.
-
----
-
-## 🛠️ Functional Summary
-
-- 🔍 **Dynamic Kernel Base Resolution**  
-  Resolves the base of `ntoskrnl.exe` at runtime via IDT traversal.
-
-- 🧱 **Object Type Hooking**  
-  Intercepts access to processes and drivers by patching `OBJECT_TYPE` handlers.
-
-- 🧬 **Driver Object Decoying**  
-  Creates synthetic driver objects from real metadata to confuse scanners.
-
-- 🧠 **Salted Hash Matching**  
-  Obscures detection logic by relying on non-reversible, stable hashes.
-
-- 🧹 **Self-Cleaning Lifecycle**  
-  Fully restores kernel structures and frees all allocations on exit.
+A stealthy Windows kernel-mode driver that leverages low-level operating system internals to selectively block access to processes and drivers based on salted-hash signatures. Built with AV-evasion and forensic resilience in mind, it uses runtime resolution, memory-safe metadata cloning, and targeted object hook interception to minimize footprint and detection surface.
 
 ---
 
-## 🧩 Technical Highlights
+## 📌 Features
 
-### ⚡ IDT-Based Kernel Base Resolution
+- **IDT-Based Kernel Base Resolution**  
+  Locates the `ntoskrnl.exe` base using the Interrupt Descriptor Table (IDT), avoiding traditional enumeration methods prone to AV detection.
 
-   - Resolves kernel base address without relying on `PsLoadedModuleList` or export parsing.  
-   - Utilizes Interrupt Descriptor Table introspection for stealth and reliability.  
-   - Allows precise pointer resolution for internal kernel functions.
+- **Dynamic Function Pointer Table**  
+  Builds a secure runtime pointer table to internal kernel routines (`SeLocateProcessImageName`, memory allocation APIs, etc.), removing compile-time link dependencies.
 
-### 🔐 Handle Creation Interception
+- **Selective Access Interception**  
+  Hooks key object types at the kernel level:
+  - `Process`
+  - `Thread`
+  - `File`
+  - `Driver`  
+  Enables rejection of handle creations/duplications/opens based on verified, salted hash lookups.
 
-   - Hooks `OpenProcedure` in `OBJECT_TYPE` entries for `PsProcessType`, `IoDriverObjectType`.  
-   - Intercepts handle requests and extracts the target's image name.  
-   - Applies a salted, case-insensitive hashing mechanism.  
-   - Compares against an internal blacklist (e.g., known AV or EDR modules).  
-   - Denies access silently using `STATUS_ACCESS_DISABLED_BY_POLICY_DEFAULT`.
+- **Hash-Based Process & Driver Evaluation**  
+  Image names are hashed using a case-insensitive salted hashing mechanism. These are compared against a hardcoded hash list (`AV_Hashes`) to allow or deny access operations in real time.
 
-### 🧊 Driver Cloaking via Metadata Reuse
+- **Driver Object Spoofing**  
+  Allocates a dummy `DRIVER_OBJECT` by cloning from a legitimate driver (e.g., `\Driver\spaceport`). This object is structurally valid, mountable, and safely used to redirect or camouflage inspection attempts.
 
-   - Selects a legitimate driver object (e.g., `\Driver\spaceport`) as a metadata donor.  
-   - Duplicates its structure to create a valid, fake `DRIVER_OBJECT`.  
-   - Ensures dispatch tables, section sizes, and list entries are consistent.  
-   - Can be registered and exposed to mislead scanners or hide actual components.
+- **Safe Runtime Deactivation**  
+  Hooks can be installed and removed gracefully. Execution delay is used post-load to allow system stabilization before unloading, ensuring a forensic-safe cleanup with minimal kernel residue.
 
-### 🧬 Hash-Based Identity Masking
-
-   - Replaces direct string comparisons with salted hashes of image names.  
-   - All hashes are normalized (case-insensitive, trimmed to filename).  
-   - Resistant to user-mode detection or brute-force enumeration.  
-   - Supports fast matching for runtime policy enforcement.
-
-### ♻️ Clean Teardown
-
-   - Restores all hooked procedures and frees decoy objects.  
-   - Prevents residual state in object manager or kernel memory.  
-   - Ensures stability and safety across repeated load/unload cycles.
 
 ---
 
-## ⚠️ Disclaimer
+### 🧷 Object Type Hooking
 
-This project is provided **strictly for educational and research purposes**.
+The driver intercepts the following object initializers by modifying their type-specific `OpenProcedure` handlers:
 
-It demonstrates advanced kernel-level concepts such as:
+- `PsProcessType`
+- `PsThreadType`
+- `IoFileObjectType`
+- `IoDriverObjectType`
 
-   - Object manager tampering  
-   - Handle access mediation  
-   - Metadata spoofing  
-   - Runtime stealth tactics  
-
-**Do not use this for malicious purposes.** Unauthorized interference with third-party software or evasion of endpoint protections is unethical and may be illegal.
-
-🧠 Use responsibly. Operate only in controlled environments. Respect local laws and system integrity.
+This allows precise filtering of handle requests during creation, duplication, or opening phases, based on the calling context and target hash match.
 
 ---
 
-## ✍️ Author Notes
+### 🧮 Salted Hashing Logic
+
+Process, thread, file, and driver image names are extracted using `SeLocateProcessImageName` or direct driver name parsing. Filenames are isolated, then hashed using a case-insensitive salted function to generate a unique identifier. The system avoids raw string comparisons entirely.
+
+---
+
+### 🧬 Metadata Cloaking
+
+Metadata activity:
+- A known driver object is cloned into memory.
+- List pointers are copied.
+- Dispatch table, size, and name are preserved.
+- Original metadata is restored post-use.
+
+The cloned object behaves identically to the original without affecting system stability.
+
+---
+
+
+## 🚫 Disclaimer
+
+This project is intended for **educational and research purposes only**. It is not designed or supported for production use, malicious deployment, or use in circumventing protections in unauthorized ways.
+
+---
+
+## 👤 Author Notes
+
 WIP
