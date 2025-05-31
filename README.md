@@ -56,6 +56,7 @@ The cloned object behaves identically to the original without affecting system s
 
 ---
 
+![Feedback]([path/to/image](https://cdn.discordapp.com/attachments/1217690516804866172/1378294258519244841/image.png?ex=683c140e&is=683ac28e&hm=e1dad0a26eded13d80587433b3c7e24f90f2230e33a05eae4db2112d67ac4fc6&)
 
 ## 🚫 Disclaimer
 
