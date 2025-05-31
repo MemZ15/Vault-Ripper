@@ -31,7 +31,7 @@ extern "C" NTSTATUS DriverEntry() {
 		// Find and save pointer info for WIN-API functions
 		hooks::hook_win_API( base, size, table_handle );
 
-		// Find and expose a legit Windows driver to copy its metadata to our dummy
+		// Find and expose a legit Windows driver to copy its metadata to our dummy : Hash this too
 		modules::get_driver_object( L"\\Driver\\spaceport", tar_obj, table_handle );
 
 		// Create the Fake Driver Object purely to be used as a decoy

@@ -39,3 +39,4 @@ uintptr_t helpers::resolve_relative_address( uintptr_t instruction_address, int 
 
     return instruction_address + instruction_size + relative_offset;
 }
+

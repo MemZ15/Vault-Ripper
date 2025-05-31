@@ -41,10 +41,6 @@ void hooks::hook_win_API( uintptr_t base, size_t size, func_pointer_table &table
 	Logger::Print( Logger::Level::Info, "Table Populated" );
 }
 
-
-
-
-
 object_type* hooks::capture_initalizer_table( uintptr_t base, size_t size, pointer_table& table_handle, void* obj, bool should_hook ){
 	auto ob_type_index_table_base = table_handle.ObTypeIndexTable;
 
@@ -103,4 +99,4 @@ object_type* hooks::capture_initalizer_table( uintptr_t base, size_t size, point
 	}
 }
 
-	//FILE OBJECT needs to be hooked, and parsed
+	//FILE OBJECT needs to be hooked, and parsed?

@@ -18,40 +18,93 @@ namespace modules {
 
 	void scan_file_sys(uintptr_t base, size_t size, func_pointer_table table_handle);
 
+	static const WCHAR* FindFilenameStart( const WCHAR* full_path, size_t length ) {
+		for ( size_t i = length; i > 0; --i ) {
+			
+			if ( full_path[i - 1] == L'\\' ) {
+				return &full_path[i];
+			}
+		}
+		return full_path;
+	}
 }
 
 
 namespace driver_information {
-
 	struct DriverMetadata {
-		PVOID OriginalDriverStart = nullptr;           // Original DriverStart field
-		SIZE_T OriginalDriverSize;                // Original DriverSize field
-		PVOID OriginalSectionSize = nullptr;          // Original DriverSection pointer
-		PDEVICE_OBJECT OriginalObject = nullptr;      // Original DeviceObject pointer
-		PUNICODE_STRING DriverName = nullptr;         // Original DriverName
-		PDRIVER_DISPATCH OriginalDeviceControl = nullptr; // Original IRP_MJ_DEVICE_CONTROL function
+		PVOID OriginalDriverStart{ nullptr };
+		SIZE_T OriginalDriverSize{};             
+		PVOID OriginalSectionSize{ nullptr };
+		PDEVICE_OBJECT OriginalObject{ nullptr };
+		PUNICODE_STRING DriverName{ nullptr };
+		PDRIVER_DISPATCH OriginalDeviceControl{ nullptr };
 
-		SIZE_T OriginalImageSize;                         // Original SizeOfImage from KLDR_DATA_TABLE_ENTRY
+		SIZE_T OriginalImageSize{};            
 		struct OriginalListPointers {
-			PLIST_ENTRY Blink = nullptr;              // Pointer to the previous entry in the list
-			PLIST_ENTRY Flink = nullptr;              // Pointer to the next entry in the list
-		} OriginalList;
+			PLIST_ENTRY Blink{ nullptr };
+			PLIST_ENTRY Flink{ nullptr };
+		} OriginalList{};
 	};
-
 
 	struct Target_DriverMetadata {
-		PVOID OriginalDriverStart = nullptr;           // Original DriverStart field
-		SIZE_T OriginalDriverSize;                // Original DriverSize field
-		PVOID OriginalSectionSize = nullptr;          // Original DriverSection pointer
-		PDEVICE_OBJECT OriginalObject = nullptr;      // Original DeviceObject pointer
-		PUNICODE_STRING DriverName = nullptr;         // Original DriverName
-		PDRIVER_DISPATCH OriginalDeviceControl = nullptr; // Original IRP_MJ_DEVICE_CONTROL function
+		PVOID OriginalDriverStart{ nullptr };
+		SIZE_T OriginalDriverSize{};
+		PVOID OriginalSectionSize{ nullptr };
+		PDEVICE_OBJECT OriginalObject{ nullptr };
+		PUNICODE_STRING DriverName{ nullptr };
+		PDRIVER_DISPATCH OriginalDeviceControl{ nullptr };
 
-		SIZE_T OriginalImageSize;                         // Original SizeOfImage from KLDR_DATA_TABLE_ENTRY
+		SIZE_T OriginalImageSize{};
 		struct OriginalListPointers {
-			PLIST_ENTRY Blink = nullptr;              // Pointer to the previous entry in the list
-			PLIST_ENTRY Flink = nullptr;              // Pointer to the next entry in the list
-		} OriginalList;
+			PLIST_ENTRY Blink{ nullptr };
+			PLIST_ENTRY Flink{ nullptr };
+		} OriginalList{};
 	};
+}
 
+
+namespace hash {
+
+	constexpr UINT64 FNV_OFFSET_BASIS = 0xCBF29CE484222325;
+	constexpr UINT64 FNV_PRIME = 0x100000001B3;
+	constexpr UINT64 HASH_SALT = 0xA5A5A5A5A5A5A5A5;
+	constexpr UINT64 XOR_KEY = 0x1337133713371337;
+
+	constexpr UINT64 obfuscate( UINT64 hash ) {
+		return hash ^ XOR_KEY;
+	}
+	constexpr UINT64 deobfuscate( UINT64 obf_hash ) {
+	return obf_hash ^ XOR_KEY;
+	}
+	
+	
+	inline UINT64 salted_hash_string_ci( const WCHAR* str, size_t len ) {
+		UINT64 hash = FNV_OFFSET_BASIS ^ HASH_SALT;
+		
+		for ( size_t i = 0; i < len; ++i ) {
+
+			WCHAR c = RtlUpcaseUnicodeChar( str[i] );
+			hash ^= static_cast< UINT64 >( c );
+			hash *= FNV_PRIME;
+		}
+		return hash;
+	}
+
+	inline UINT64 salted_hash_unicode_string_ci( const UNICODE_STRING& ustr ) {
+		if ( !ustr.Buffer || ustr.Length == 0 ) return 0;
+			
+		return salted_hash_string_ci( ustr.Buffer, ustr.Length / sizeof( 2 ) );
+		}
+
+	inline UINT64 hash_bytes_ci( const BYTE* data, size_t length ) {
+		UINT64 hash = FNV_OFFSET_BASIS ^ HASH_SALT;
+		for ( size_t i = 0; i < length; ++i ) {
+			BYTE b = data[i];
+			hash ^= b;
+			hash *= FNV_PRIME;
+		}
+		return obfuscate( hash );
+	}
+
+	#define HASH_TARGET(name_literal) \::hash::obfuscate( \::hash::salted_hash_string_ci(name_literal, sizeof(name_literal) / sizeof(2) - 1) \)
 }

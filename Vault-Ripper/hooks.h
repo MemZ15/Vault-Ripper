@@ -10,6 +10,8 @@ typedef POBJECT_TYPE( *GetIoDriverObjectType_t )( void );
 typedef PEPROCESS( *PsGetNextProcess_t )( PEPROCESS PROCESS );
 typedef PEPROCESS( *PsInitialSystemProcess_t )( void );
 typedef POBJECT_TYPE** ObTypeIndexTable_t;
+
+
 typedef struct func_pointer_table {
     uintptr_t PsLoadedModuleList;
     uintptr_t PsActiveProcessHead;
@@ -36,17 +38,12 @@ namespace hooks {
 
 namespace AV {
 
-    bool process_extraction( PEPROCESS process, LPCWSTR target_name );
+    bool process_extraction( PEPROCESS process, UINT64 obf_target_hash );
 
-    bool thread_extraction( PETHREAD thread, LPCWSTR target_name );
+    bool thread_extraction( PETHREAD thread, UINT64 target_hash );
 
-    bool driver_name_extraction( DRIVER_OBJECT* driver_object, LPCWSTR target_filename );
+    bool driver_name_extraction( DRIVER_OBJECT* driver_object, UINT64 target_hash );
 
     bool file_extraction( FILE_OBJECT* process, LPCWSTR target_name );
 
-    static bool CompareStringsIgnoreCase( LPCWSTR a, LPCWSTR b );
-
-    static const WCHAR* ExtractFileName( const WCHAR* full_path, size_t length );
-
-    static bool CompareUnicodeStringToTarget( const UNICODE_STRING& uni_str, LPCWSTR target_name );
 }

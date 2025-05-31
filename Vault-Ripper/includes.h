@@ -12,4 +12,11 @@ namespace globals {
 
 	extern uintptr_t table;
 
+
+	// AV_Hashes to be added to defensive iterations list
+	constexpr UINT64 AV_Hashes[] = {
+	0x854b1360fbba2cba, // MBAMService.exe
+
+	};
+
 }
