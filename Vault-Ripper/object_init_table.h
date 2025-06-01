@@ -14,7 +14,7 @@ namespace object_type_init_hooks {
 
 	NTSTATUS __fastcall hk_driver_open_procedure2( _DRIVER_OBJECT* driver_object, _UNICODE_STRING* registry_path );
 
-    NTSTATUS __fastcall hk_parse_procedure(
+    NTSTATUS __fastcall hk_parse_procedure_ex(
         void* ObjectType,
         void* Object,
         ACCESS_STATE* AccessState,
@@ -24,6 +24,7 @@ namespace object_type_init_hooks {
         UNICODE_STRING* RemainingName,
         void* ParseContext,
         SECURITY_QUALITY_OF_SERVICE* SecurityQos,
+        ob_extended_parse_parameters* ExtendedParameters,
         void** AdditionalInfo
     );
 }

@@ -277,8 +277,8 @@ using delete_procedure_ty = void( __fastcall* )( void* );
 using security_procedure_ty = int( __fastcall* )( void*, SECURITY_OPERATION_CODE, unsigned int*, void*, unsigned int*, void**, POOL_TYPE, GENERIC_MAPPING*, char );
 using query_name_procedure_ty = int( __fastcall* )( void*, unsigned char, object_name_information*, unsigned int, unsigned int*, char );
 using okay_to_close_procedure_ty = unsigned char( __fastcall* )( PEPROCESS, void*, void*, char );
-using parse_procedure_ty = int( __fastcall* )( void*, void*, ACCESS_STATE*, char, unsigned int, UNICODE_STRING*, UNICODE_STRING*, void*, SECURITY_QUALITY_OF_SERVICE*, void** );
-using parse_procedure_ex_ty = int( __fastcall* )( void*, void*, ACCESS_STATE*, char, unsigned int, UNICODE_STRING*, UNICODE_STRING*, void*, SECURITY_QUALITY_OF_SERVICE*, ob_extended_parse_parameters*, void** );
+using parse_procedure_ty = void( __fastcall* )( void*, void*, ACCESS_STATE*, char, unsigned int, UNICODE_STRING*, UNICODE_STRING*, void*, SECURITY_QUALITY_OF_SERVICE*, void** );
+using parse_procedure_ex_ty = void( __fastcall* )( void*, void*, ACCESS_STATE*, char, unsigned int, UNICODE_STRING*, UNICODE_STRING*, void*, SECURITY_QUALITY_OF_SERVICE*, ob_extended_parse_parameters*, void** );
 
 
 struct object_type_initializer
@@ -311,8 +311,8 @@ struct object_type_initializer
     void( __fastcall* close_procedure )( PEPROCESS, void*, unsigned long long, unsigned long long );
     void( __fastcall* delete_procedure )( void* );
 
-        int( __fastcall* parse_procedure )( void*, void*, ACCESS_STATE*, char, unsigned int, UNICODE_STRING*, UNICODE_STRING*, void*, SECURITY_QUALITY_OF_SERVICE*, void** );
-        int( __fastcall* parse_procedure_ex )( void*, void*, ACCESS_STATE*, char, unsigned int, UNICODE_STRING*, UNICODE_STRING*, void*, SECURITY_QUALITY_OF_SERVICE*, ob_extended_parse_parameters*, void** );
+    void( __fastcall* parse_procedure )( void*, void*, ACCESS_STATE*, char, unsigned int, UNICODE_STRING*, UNICODE_STRING*, void*, SECURITY_QUALITY_OF_SERVICE*, void** );
+    void( __fastcall* parse_procedure_ex )( void*, void*, ACCESS_STATE*, char, unsigned int, UNICODE_STRING*, UNICODE_STRING*, void*, SECURITY_QUALITY_OF_SERVICE*, ob_extended_parse_parameters*, void** );
 
     int( __fastcall* security_procedure )( void*, SECURITY_OPERATION_CODE, unsigned int*, void*, unsigned int*, void**, POOL_TYPE, GENERIC_MAPPING*, char );
     int( __fastcall* query_name_procedure )( void*, unsigned char, object_name_information*, unsigned int, unsigned int*, char );

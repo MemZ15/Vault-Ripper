@@ -5,7 +5,7 @@
 
 ob_type_hook_pair driver;
 
-NTSTATUS __fastcall object_type_init_hooks::hk_parse_procedure(
+NTSTATUS __fastcall object_type_init_hooks::hk_parse_procedure_ex(
     void* ObjectType,
     void* Object,
     ACCESS_STATE* AccessState,
@@ -15,18 +15,23 @@ NTSTATUS __fastcall object_type_init_hooks::hk_parse_procedure(
     UNICODE_STRING* RemainingName,
     void* ParseContext,
     SECURITY_QUALITY_OF_SERVICE* SecurityQos,
+    ob_extended_parse_parameters* ExtendedParameters,
     void** AdditionalInfo
 ) {
+    
+    if ( !Object )
+        return STATUS_SUCCESS;
 
-    DbgPrint( "Driver Info consulted" );
+    // Log info — example, print the object name if available
+    DbgPrint( "[ParseProcedureEx]\n");
 
-    // Possibly inspect AccessState, AccessReason, HandleCount etc. here
 
-    // Call the original parse procedure
+    // Inspect other params if desired, e.g., AccessReason, ExtendedParameters, etc.
     return STATUS_SUCCESS;
 
-
 }
+
+
 
 
 
