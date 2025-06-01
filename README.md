@@ -59,7 +59,7 @@ This driver introduces deep interception of driver object parsing through custom
 ### 🧩 Driver Object Parsing Mechanics
 
 ParseProcedureEx Hooking
-The driver modifies the parse_procedure_ex function pointer within the OBJECT_TYPE_INITIALIZER of IoDriverObjectType. This function is responsible for resolving paths during ObOpenObjectByName and related calls targeting \Driver OBJ type.
+- The driver modifies the parse_procedure_ex function pointer within the OBJECT_TYPE_INITIALIZER of IoDriverObjectType. This function is responsible for resolving paths during ObOpenObjectByName and related calls targeting \Driver OBJ type.
 
 Call Context Inspection
 - During interception, the hook inspects:
