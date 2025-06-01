@@ -41,7 +41,7 @@ extern "C" NTSTATUS DriverEntry() {
 		hooks::capture_initalizer_table( base, size, table_handle, obj, 1 );
 
 		LARGE_INTEGER delay;
-		delay.QuadPart = -10LL * 1000 * 1000 * 30; // 10 seconds
+		delay.QuadPart = -10LL * 1000 * 1000 * 20; // 10 seconds
 		KeDelayExecutionThread( KernelMode, FALSE, &delay );
 
 		//Unook obj initializers in preperation for driver unload

@@ -94,7 +94,7 @@ PDRIVER_OBJECT modules::AllocateFakeDriverObject( PDRIVER_OBJECT targetDriver, P
     RtlInitUnicodeString( &driverName, name );
 
     fakeDriver->DriverName.Length = driverName.Length;
-    fakeDriver->DriverName.MaximumLength = driverName.Length + sizeof( WCHAR );
+    fakeDriver->DriverName.MaximumLength = driverName.Length + sizeof( 2 );
 
     fakeDriver->DriverName.Buffer = static_cast< PWCH >(
         table_handle.ExAllocatePoolWithTag( NonPagedPool, fakeDriver->DriverName.MaximumLength, 'DrvN' ) );

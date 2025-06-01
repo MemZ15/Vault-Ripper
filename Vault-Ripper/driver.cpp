@@ -5,11 +5,11 @@
 
 ob_type_hook_pair driver;
 
-NTSTATUS __fastcall object_type_init_hooks::hk_parse_procedure_ex( VOID* ObjectType, VOID* Object, ACCESS_STATE* AccessState, char AccessReason, unsigned int HandleCount, UNICODE_STRING* ObjectName, UNICODE_STRING* RemainingName, VOID* ParseContext, SECURITY_QUALITY_OF_SERVICE* SecurityQos, ob_extended_parse_parameters* ExtendedParameters, VOID** AdditionalInfo ) {
+NTSTATUS __fastcall object_type_init_hooks::hk_parse_procedure_ex( VOID* ObjectType, VOID* Object ) {
     
     DbgPrint( "ParseProcedureEx Called\n" );
-
-    return HandleCount;
+    if ( !ObjectType || !Object  )
+        return SL_READ_ACCESS_GRANTED;
 
 }
 
