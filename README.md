@@ -56,7 +56,7 @@ The cloned object behaves identically to the original without affecting system s
 🔎 Driver Object Parsing Interception
 This driver introduces deep interception of driver object parsing through custom hooks on the ParseProcedureEx routines within the IoDriverObjectType. This low-level interception allows for precise visibility and control over access attempts to driver objects initiated by user or kernel components.
 
-###🧩 Driver Object Parsing Mechanics
+### 🧩 Driver Object Parsing Mechanics
 
 ParseProcedureEx Hooking
 The driver modifies the parse_procedure_ex function pointer within the OBJECT_TYPE_INITIALIZER of IoDriverObjectType. This function is responsible for resolving paths during ObOpenObjectByName and related calls targeting \Driver OBJ type.
