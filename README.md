@@ -53,6 +53,23 @@ Metadata activity:
 - Original metadata is restored post-use.
 
 The cloned object behaves identically to the original without affecting system stability.
+🔎 Driver Object Parsing Interception
+This driver introduces deep interception of driver object parsing through custom hooks on the ParseProcedureEx routines within the IoDriverObjectType. This low-level interception allows for precise visibility and control over access attempts to driver objects initiated by user or kernel components.
+
+###🧩 Driver Object Parsing Mechanics
+
+ParseProcedureEx Hooking
+The driver modifies the parse_procedure_ex function pointer within the OBJECT_TYPE_INITIALIZER of IoDriverObjectType. This function is responsible for resolving paths during ObOpenObjectByName and related calls targeting \Driver OBJ type.
+
+Call Context Inspection
+- During interception, the hook inspects:
+- ObjectName and RemainingName fields (UNICODE_STRING*)
+- AccessState, AccessReason, and HandleCount
+- The extended ob_extended_parse_parameters structure, if present
+
+Filtering Logic
+- Driver names are extracted from ObjectName, lowercased, and salted-hashed before being compared against a static list of allowed or denied driver identifiers. Unauthorized or suspicious requests are rejected early with clean status codes like
+- STATUS_OBJECT_NAME_NOT_FOUND, masking the presence of cloaked drivers.
 
 ---
 
