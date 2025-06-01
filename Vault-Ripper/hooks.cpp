@@ -73,8 +73,8 @@ object_type* hooks::capture_initalizer_table( uintptr_t base, size_t size, point
 					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.open_procedure ), reinterpret_cast< void* >( object_type_init_hooks::hk_thread_open_procedure ) );
 					break;
 				case 34:
-					hook_metadata.driver.o_parse_procedure = reinterpret_cast< parse_procedure_ty >( obj->type_info.parse_procedure );
-					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.open_procedure ), reinterpret_cast< void* >( object_type_init_hooks::hk_parse_procedure ) );
+					hook_metadata.driver.o_parse_procedure_detail = reinterpret_cast< parse_procedure_ty >( obj->type_info.parse_procedure );
+					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.parse_procedure ), reinterpret_cast< void* >( object_type_init_hooks::hk_parse_procedure ) );
 					break;
 				}
 			}
@@ -93,7 +93,7 @@ object_type* hooks::capture_initalizer_table( uintptr_t base, size_t size, point
 					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.open_procedure ), reinterpret_cast< void* >( hook_metadata.thread.o_open_procedure ) );
 					break;
 				case 34:
-					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.open_procedure ), reinterpret_cast< void* >( hook_metadata.driver.o_parse_procedure ) );
+					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.parse_procedure ), reinterpret_cast< void* >( hook_metadata.driver.o_parse_procedure_detail ) );
 					break;
 				}
 			}

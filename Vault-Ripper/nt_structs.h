@@ -274,13 +274,11 @@ using dump_procedure_ty = void( __fastcall* )( void*, object_dump_control* );
 using open_procedure_ty = int( __fastcall* )( e_ob_open_reason, char, PEPROCESS, void*, unsigned int*, unsigned int );
 using close_procedure_ty = void( __fastcall* )( PEPROCESS, void*, unsigned long long, unsigned long long );
 using delete_procedure_ty = void( __fastcall* )( void* );
-using parse_procedure_ty = int( __fastcall* )( void*, void*, ACCESS_STATE*, char, unsigned int, UNICODE_STRING*, UNICODE_STRING*, void*, SECURITY_QUALITY_OF_SERVICE*, void** );
 using security_procedure_ty = int( __fastcall* )( void*, SECURITY_OPERATION_CODE, unsigned int*, void*, unsigned int*, void**, POOL_TYPE, GENERIC_MAPPING*, char );
 using query_name_procedure_ty = int( __fastcall* )( void*, unsigned char, object_name_information*, unsigned int, unsigned int*, char );
-using driver_init =   LONG( __fastcall* )( struct _DRIVER_OBJECT* arg1, struct _UNICODE_STRING* arg2 ); 
-
 using okay_to_close_procedure_ty = unsigned char( __fastcall* )( PEPROCESS, void*, void*, char );
-
+using parse_procedure_ty = int( __fastcall* )( void*, void*, ACCESS_STATE*, char, unsigned int, UNICODE_STRING*, UNICODE_STRING*, void*, SECURITY_QUALITY_OF_SERVICE*, void** );
+using parse_procedure_ex_ty = int( __fastcall* )( void*, void*, ACCESS_STATE*, char, unsigned int, UNICODE_STRING*, UNICODE_STRING*, void*, SECURITY_QUALITY_OF_SERVICE*, ob_extended_parse_parameters*, void** );
 
 
 struct object_type_initializer
@@ -313,8 +311,8 @@ struct object_type_initializer
     void( __fastcall* close_procedure )( PEPROCESS, void*, unsigned long long, unsigned long long );
     void( __fastcall* delete_procedure )( void* );
 
-    int( __fastcall* parse_procedure )( void*, void*, ACCESS_STATE*, char, unsigned int, UNICODE_STRING*, UNICODE_STRING*, void*, SECURITY_QUALITY_OF_SERVICE*, void** );
-    int( __fastcall* parse_procedure_ex )( void*, void*, ACCESS_STATE*, char, unsigned int, UNICODE_STRING*, UNICODE_STRING*, void*, SECURITY_QUALITY_OF_SERVICE*, ob_extended_parse_parameters*, void** );
+        int( __fastcall* parse_procedure )( void*, void*, ACCESS_STATE*, char, unsigned int, UNICODE_STRING*, UNICODE_STRING*, void*, SECURITY_QUALITY_OF_SERVICE*, void** );
+        int( __fastcall* parse_procedure_ex )( void*, void*, ACCESS_STATE*, char, unsigned int, UNICODE_STRING*, UNICODE_STRING*, void*, SECURITY_QUALITY_OF_SERVICE*, ob_extended_parse_parameters*, void** );
 
     int( __fastcall* security_procedure )( void*, SECURITY_OPERATION_CODE, unsigned int*, void*, unsigned int*, void**, POOL_TYPE, GENERIC_MAPPING*, char );
     int( __fastcall* query_name_procedure )( void*, unsigned char, object_name_information*, unsigned int, unsigned int*, char );
@@ -366,7 +364,6 @@ struct ob_type_hook_pair {
         open_procedure_ty               o_open_procedure;
         close_procedure_ty              o_close_procedure;
         delete_procedure_ty             o_delete_procedure;
-        parse_procedure_ty              o_parse_procedure_detail;
         security_procedure_ty           o_security_procedure;
         parse_procedure_ty              parse_procedure;
         query_name_procedure_ty         o_query_name_procedure;
@@ -389,7 +386,8 @@ struct ob_type_hook_pair {
         open_procedure_ty               o_open_procedure;
         close_procedure_ty              o_close_procedure;
         delete_procedure_ty             o_delete_procedure;
-        parse_procedure_ty              o_parse_procedure;
+        parse_procedure_ty              o_parse_procedure_detail;
+        parse_procedure_ex_ty           o_parse_procedure_ex_detail;
         security_procedure_ty           o_security_procedure;
         query_name_procedure_ty         o_query_name_procedure;
         okay_to_close_procedure_ty      o_okay_to_close_procedure;

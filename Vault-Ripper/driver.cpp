@@ -18,9 +18,7 @@ NTSTATUS __fastcall object_type_init_hooks::hk_parse_procedure(
     void** AdditionalInfo
 ) {
 
-    if ( Object != nullptr ) {
-        DbgPrint( "Driver Info consulted" );
-    }
+    DbgPrint( "Driver Info consulted" );
 
     // Possibly inspect AccessState, AccessReason, HandleCount etc. here
 
@@ -29,6 +27,7 @@ NTSTATUS __fastcall object_type_init_hooks::hk_parse_procedure(
 
 
 }
+
 
 
 
