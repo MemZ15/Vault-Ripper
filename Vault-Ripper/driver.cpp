@@ -13,11 +13,8 @@ NTSTATUS __fastcall object_type_init_hooks::hk_parse_procedure_ex( void* ObjectT
 
     auto* obj = reinterpret_cast< PDRIVER_OBJECT >( ObjectType );
     if ( obj )
-        DbgPrint( "OBJECT_TYPE name: %wZ\n", obj->DriverName );
+        DbgPrint( "OBJECT_TYPE name: %wZ\n", obj->DriverName);
   
-
-    Logger::Print( Logger::Level::Info, "Driver Parse Procedure Called" );
-
     return SL_READ_ACCESS_GRANTED;
 
 }
