@@ -6,6 +6,8 @@
 #include <winsmcrd.h>
 #include <cstdint>
 #include <ntddk.h>
+#include "nt_structs.h"
+
 
 #define OBGetObjectType_HASH						0x6246ac8b9eb0daa4
 #define ExAllocatePoolWithTag_HASH					0xe7c4d473c919c038
@@ -17,7 +19,9 @@
 
 namespace globals {
 
-	extern uintptr_t table;
+	extern uintptr_t stored_one;
+	extern _OBJECT_TYPE* stored_two;
+
 
 	// AV_Hashes to be added to defensive iterations list
 	inline constexpr UINT64 AV_Hashes[] = {

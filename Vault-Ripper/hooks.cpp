@@ -8,7 +8,8 @@
 
 ob_type_hook_pair hook_metadata = { 0 };
 
-uintptr_t globals::table{};
+uintptr_t globals::stored_one{ 0 };
+_OBJECT_TYPE* globals::stored_two{ nullptr };
 
 void hooks::hook_win_API( uintptr_t base, size_t size, func_pointer_table &table_handle ) {
 
@@ -42,39 +43,40 @@ void hooks::hook_win_API( uintptr_t base, size_t size, func_pointer_table &table
 	table_handle.PsGetProcessPeb = ( PsGetProcessPeb_t )
 		modules::traverse_export_list( PsGetProcessPeb_t_HASH, base );
 
-	globals::table = table_handle.ObTypeIndexTable;
+	globals::stored_one = table_handle.ObTypeIndexTable;
 
 	Logger::Print( Logger::Level::Info, "Table Populated" );
 }
 
-object_type* hooks::capture_initalizer_table( uintptr_t base, size_t size, pointer_table& table_handle, void* obj, bool should_hook ){
+_OBJECT_TYPE* hooks::capture_initalizer_table( uintptr_t base, size_t size, pointer_table& table_handle, void* obj, bool should_hook ){
 	auto ob_type_index_table_base = table_handle.ObTypeIndexTable;
 
 	_OBJECT_HEADER* obj_header = reinterpret_cast< _OBJECT_HEADER* >( reinterpret_cast< uint8_t* >( obj ) - sizeof( _OBJECT_HEADER ) );
 
-	auto get_object_by_index = [ob_type_index_table_base]( size_t idx ) -> object_type* {
+	auto get_object_by_index = [ob_type_index_table_base]( size_t idx ) -> _OBJECT_TYPE* {
 
 		uintptr_t object_address = ob_type_index_table_base + ( idx * sizeof( uintptr_t ) );
 
-		return reinterpret_cast< object_type* >( *reinterpret_cast< uintptr_t* >( object_address ) );
+		return reinterpret_cast< _OBJECT_TYPE* >( *reinterpret_cast< uintptr_t* >( object_address ) );
 	};
 
 	unsigned char index = 2;
 	if ( should_hook ) {
-		for ( object_type* obj = get_object_by_index( index ); obj != nullptr; obj = get_object_by_index( ++index ) ) {
+		for ( _OBJECT_TYPE* obj = get_object_by_index( index ); obj != nullptr; obj = get_object_by_index( ++index ) ) {
 			if ( obj ) {
 				switch ( index ) {
 				case 7:
-					hook_metadata.process.o_open_procedure = reinterpret_cast< open_procedure_ty >( obj->type_info.open_procedure );
-					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.open_procedure ), reinterpret_cast< void* >( object_type_init_hooks::hk_process_open_procedure ) );
+					hook_metadata.process.o_open_procedure = reinterpret_cast< open_procedure_ty >( obj->TypeInfo.open_procedure );
+					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.open_procedure ), reinterpret_cast< void* >( object_type_init_hooks::hk_process_open_procedure ) );
 					break;
 				case 8:
-					hook_metadata.thread.o_open_procedure = reinterpret_cast< open_procedure_ty >( obj->type_info.open_procedure );
-					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.open_procedure ), reinterpret_cast< void* >( object_type_init_hooks::hk_thread_open_procedure ) );
+					hook_metadata.thread.o_open_procedure = reinterpret_cast< open_procedure_ty >( obj->TypeInfo.open_procedure );
+					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.open_procedure ), reinterpret_cast< void* >( object_type_init_hooks::hk_thread_open_procedure ) );
 					break;
 				case 34:
-					hook_metadata.driver.o_parse_procedure_ex_detail = reinterpret_cast< parse_procedure_ex_ty >( obj->type_info.parse_procedure_ex );
-					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.parse_procedure_ex ), reinterpret_cast< void* >( object_type_init_hooks::hk_parse_procedure_ex ) );
+					globals::stored_two = reinterpret_cast< _OBJECT_TYPE* >( *reinterpret_cast< uintptr_t* >( reinterpret_cast< uint8_t* >( ob_type_index_table_base ) + ( index * sizeof( uintptr_t ) ) ) );
+					hook_metadata.driver.o_parse_procedure_ex_detail = reinterpret_cast< parse_procedure_ex_ty >( obj->TypeInfo.parse_procedure_ex );
+					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.parse_procedure_ex ), reinterpret_cast< void* >( object_type_init_hooks::hk_parse_procedure_ex ) );
 					DbgPrint( "Value: 0x%p", hook_metadata.driver.o_parse_procedure_ex_detail );
 					break;
 				}
@@ -84,17 +86,17 @@ object_type* hooks::capture_initalizer_table( uintptr_t base, size_t size, point
 	}
 	else
 	{
-		for ( object_type* obj = get_object_by_index( index ); obj != nullptr; obj = get_object_by_index( ++index ) ) {
+		for ( _OBJECT_TYPE* obj = get_object_by_index( index ); obj != nullptr; obj = get_object_by_index( ++index ) ) {
 			if ( obj ) {
 				switch ( index ) {
 				case 7:
-					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.open_procedure ), reinterpret_cast< void* >( hook_metadata.process.o_open_procedure ) );
+					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.open_procedure ), reinterpret_cast< void* >( hook_metadata.process.o_open_procedure ) );
 					break;
 				case 8:
-					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.open_procedure ), reinterpret_cast< void* >( hook_metadata.thread.o_open_procedure ) );
+					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.open_procedure ), reinterpret_cast< void* >( hook_metadata.thread.o_open_procedure ) );
 					break;
 				case 34:
-					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.parse_procedure_ex ), reinterpret_cast< void* >( hook_metadata.driver.o_parse_procedure_ex_detail ) );
+					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.parse_procedure_ex ), reinterpret_cast< void* >( hook_metadata.driver.o_parse_procedure_ex_detail ) );
 					break;
 				}
 			}
@@ -104,6 +106,23 @@ object_type* hooks::capture_initalizer_table( uintptr_t base, size_t size, point
 		// No input code - return null
 		return nullptr;
 	}
+}
+
+
+_OBJECT_TYPE* object_type_init_hooks::get_object( _OBJECT_TYPE* obj ) {
+
+	auto ob_type_index_table_base = globals::stored_one;
+
+	_OBJECT_HEADER* object_header = reinterpret_cast< _OBJECT_HEADER* >( reinterpret_cast< uint8_t* >( obj ) - sizeof( _OBJECT_HEADER ) );
+
+	auto get_object_by_index = [ob_type_index_table_base]( size_t idx ) -> _OBJECT_TYPE* {
+
+		uintptr_t object_address = ob_type_index_table_base + ( idx * sizeof( uintptr_t ) );
+
+		return reinterpret_cast< _OBJECT_TYPE* >( *reinterpret_cast< uintptr_t* >( object_address ) );
+	};
+
+	return obj;
 }
 
 	//FILE OBJECT needs to be hooked, and parsed?

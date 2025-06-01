@@ -340,21 +340,21 @@ typedef struct _ex_push_lock
         void* ptr;
     } u;
 } ex_push_lock, * pex_push_lock;
-typedef struct object_type
+
+
+
+struct _OBJECT_TYPE
 {
-    LIST_ENTRY type_list;
-    UNICODE_STRING name;
-    void* default_object;
-    unsigned char index;
-    unsigned int total_number_of_objects;
-    unsigned int total_number_of_handles;
-    unsigned int high_water_number_of_objects;
-    unsigned int high_water_number_of_handles;
-    object_type_initializer type_info;
-    ex_push_lock type_lock;
-    unsigned int key;
-    LIST_ENTRY callback_list;
-} object_type, * p_object_type;
+    _LIST_ENTRY TypeList;                                            //0x0
+    _UNICODE_STRING Name;                                            //0x10
+    VOID* DefaultObject;                                                    //0x20
+    UCHAR Index;                                                            //0x28
+    ULONG TotalNumberOfObjects;                                             //0x2c
+    ULONG TotalNumberOfHandles;                                             //0x30
+    ULONG HighWaterNumberOfObjects;                                         //0x34
+    ULONG HighWaterNumberOfHandles;                                         //0x38
+    object_type_initializer TypeInfo;                               //0x40
+};
 
 
 struct ob_type_hook_pair {

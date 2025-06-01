@@ -14,7 +14,7 @@ extern "C" NTSTATUS DriverEntry() {
 		// Define runtime vars
 		uintptr_t base{};
 
-		object_type* obj{ nullptr };
+		_OBJECT_TYPE* obj{ nullptr };
 
 		PDRIVER_OBJECT tar_obj{};
 
