@@ -5,21 +5,31 @@
 
 ob_type_hook_pair driver;
 
-NTSTATUS __fastcall object_type_init_hooks::hk_driver_open_procedure( e_ob_open_reason open_reason, uint8_t access_mode, PEPROCESS parent_process, PEPROCESS target_process, unsigned int* granted_access, unsigned long handle_count ) {
+NTSTATUS __fastcall object_type_init_hooks::hk_parse_procedure(
+    void* ObjectType,
+    void* Object,
+    ACCESS_STATE* AccessState,
+    char AccessReason,
+    unsigned int HandleCount,
+    UNICODE_STRING* ObjectName,
+    UNICODE_STRING* RemainingName,
+    void* ParseContext,
+    SECURITY_QUALITY_OF_SERVICE* SecurityQos,
+    void** AdditionalInfo
+) {
 
-    if ( !parent_process || !target_process || !granted_access )
-        return STATUS_INVALID_PARAMETER;
-
-    auto* driver_object_parent = reinterpret_cast< DRIVER_OBJECT* >( target_process );
-
-    if ( open_reason == e_ob_open_reason::ob_create_handle || open_reason == e_ob_open_reason::ob_duplicate_handle || open_reason == e_ob_open_reason::ob_open_handle ) {
-
-        DbgPrint( "Driver: %ws", driver_object_parent->DriverName.Buffer );
+    if ( Object != nullptr ) {
+        DbgPrint( "Driver Info consulted" );
     }
 
-    return hook_metadata.driver.o_open_procedure( open_reason, access_mode, parent_process, target_process, granted_access, handle_count );
+    // Possibly inspect AccessState, AccessReason, HandleCount etc. here
+
+    // Call the original parse procedure
+    return STATUS_SUCCESS;
+
 
 }
+
 
 
 

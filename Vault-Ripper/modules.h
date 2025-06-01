@@ -10,11 +10,11 @@ namespace modules {
 
 	uintptr_t traverse_export_list( UINT64 hash, uintptr_t base );
 
-	PDRIVER_OBJECT AllocateFakeDriverObject( PDRIVER_OBJECT tar, PDRIVER_OBJECT fakeDriver );
+	PDRIVER_OBJECT AllocateFakeDriverObject( PDRIVER_OBJECT tar, PDRIVER_OBJECT fakeDriver, func_pointer_table table_handle );
 
 	void* get_driver_object( const wchar_t* driver_name, PDRIVER_OBJECT& obj, pointer_table& table_handle );
 
-	void DeallocateFakeDriverObject( PDRIVER_OBJECT fakeDriver );
+	void DeallocateFakeDriverObject( PDRIVER_OBJECT fakeDriver, func_pointer_table table_handle );
 
 	void scan_file_sys(uintptr_t base, size_t size, func_pointer_table table_handle);
 

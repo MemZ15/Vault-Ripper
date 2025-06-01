@@ -28,7 +28,6 @@ bool AV::process_extraction( PEPROCESS process, UINT64 target_hash ) {
 
     for ( auto hash : globals::AV_Hashes ) {
         if ( process_hash == hash ) {
-            DbgPrint( "Killing on Hash (PROCESS): %llx", process_hash );
             return true;
         }
     }
@@ -64,7 +63,6 @@ bool AV::thread_extraction( PETHREAD thread, UINT64 target_hash ) {
 
     for ( auto hash : globals::AV_Hashes ) {
         if ( thread_hash == hash ) {
-            DbgPrint( "Killing on Hash (THREAD): %llx", thread_hash );
             return true;
         }
     }
@@ -95,7 +93,6 @@ bool AV::driver_name_extraction( DRIVER_OBJECT* driver_object, UINT64 target_has
         if ( driver_hash == hash )
             return true;
     }
-
     return false;
 }
 //

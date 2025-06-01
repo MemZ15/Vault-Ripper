@@ -11,7 +11,7 @@ typedef PEPROCESS                               ( *PsGetNextProcess_t )( PEPROCE
 typedef PEPROCESS                               ( *PsInitialSystemProcess_t )( void );
 typedef POBJECT_TYPE**                          ObTypeIndexTable_t;
 typedef PVOID                                   ( *ExAllocatePoolWithTag_t )( POOL_TYPE PoolType, SIZE_T NumberOfBytes, ULONG Tag );
-
+typedef PVOID                                   ( *ExFreePoolWithTag_t )( PVOID P, ULONG Tag );
 
 
 typedef struct func_pointer_table {
@@ -26,6 +26,7 @@ typedef struct func_pointer_table {
     PsLookupProcessByProcessId_t        PsLookupProcessByProcessID;
     PsGetProcessPeb_t                   PsGetProcessPeb;
     ExAllocatePoolWithTag_t             ExAllocatePoolWithTag;
+    ExFreePoolWithTag_t                 ExFreePoolWithTag;
 
     uintptr_t                           ObTypeIndexTable;
     PHAL_PRIVATE_DISPATCH               HalTable;

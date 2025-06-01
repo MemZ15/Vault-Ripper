@@ -275,19 +275,12 @@ using open_procedure_ty = int( __fastcall* )( e_ob_open_reason, char, PEPROCESS,
 using close_procedure_ty = void( __fastcall* )( PEPROCESS, void*, unsigned long long, unsigned long long );
 using delete_procedure_ty = void( __fastcall* )( void* );
 using parse_procedure_ty = int( __fastcall* )( void*, void*, ACCESS_STATE*, char, unsigned int, UNICODE_STRING*, UNICODE_STRING*, void*, SECURITY_QUALITY_OF_SERVICE*, void** );
-using parse_procedure_ex_ty = int( __fastcall* )( void*, void*, ACCESS_STATE*, char, unsigned int, UNICODE_STRING*, UNICODE_STRING*, void*, SECURITY_QUALITY_OF_SERVICE*, ob_extended_parse_parameters*, void** );
 using security_procedure_ty = int( __fastcall* )( void*, SECURITY_OPERATION_CODE, unsigned int*, void*, unsigned int*, void**, POOL_TYPE, GENERIC_MAPPING*, char );
 using query_name_procedure_ty = int( __fastcall* )( void*, unsigned char, object_name_information*, unsigned int, unsigned int*, char );
 using driver_init =   LONG( __fastcall* )( struct _DRIVER_OBJECT* arg1, struct _UNICODE_STRING* arg2 ); 
 
 using okay_to_close_procedure_ty = unsigned char( __fastcall* )( PEPROCESS, void*, void*, char );
 
-
-union parse_procedure_detail_ty
-{
-    parse_procedure_ty parse_procedure;
-    parse_procedure_ex_ty parse_procedure_ex;
-};
 
 
 struct object_type_initializer
@@ -373,7 +366,7 @@ struct ob_type_hook_pair {
         open_procedure_ty               o_open_procedure;
         close_procedure_ty              o_close_procedure;
         delete_procedure_ty             o_delete_procedure;
-        parse_procedure_detail_ty       o_parse_procedure_detail;
+        parse_procedure_ty              o_parse_procedure_detail;
         security_procedure_ty           o_security_procedure;
         parse_procedure_ty              parse_procedure;
         query_name_procedure_ty         o_query_name_procedure;
@@ -385,7 +378,7 @@ struct ob_type_hook_pair {
         open_procedure_ty               o_open_procedure;
         close_procedure_ty              o_close_procedure;
         delete_procedure_ty             o_delete_procedure;
-        parse_procedure_detail_ty       o_parse_procedure_detail;
+        parse_procedure_ty              o_parse_procedure;
         security_procedure_ty           o_security_procedure;
         query_name_procedure_ty         o_query_name_procedure;
         okay_to_close_procedure_ty      o_okay_to_close_procedure;
@@ -396,7 +389,7 @@ struct ob_type_hook_pair {
         open_procedure_ty               o_open_procedure;
         close_procedure_ty              o_close_procedure;
         delete_procedure_ty             o_delete_procedure;
-        parse_procedure_detail_ty       o_parse_procedure_detail;
+        parse_procedure_ty              o_parse_procedure;
         security_procedure_ty           o_security_procedure;
         query_name_procedure_ty         o_query_name_procedure;
         okay_to_close_procedure_ty      o_okay_to_close_procedure;
@@ -407,7 +400,7 @@ struct ob_type_hook_pair {
         open_procedure_ty               o_open_procedure;
         close_procedure_ty              o_close_procedure;
         delete_procedure_ty             o_delete_procedure;
-        parse_procedure_detail_ty       o_parse_procedure_detail;
+        parse_procedure_ty              o_parse_procedure;
         security_procedure_ty           o_security_procedure;
         query_name_procedure_ty         o_query_name_procedure;
         okay_to_close_procedure_ty      o_okay_to_close_procedure;
@@ -418,7 +411,7 @@ struct ob_type_hook_pair {
         open_procedure_ty               o_open_procedure;
         close_procedure_ty              o_close_procedure;
         delete_procedure_ty             o_delete_procedure;
-        parse_procedure_detail_ty       o_parse_procedure_detail;
+        parse_procedure_ty              o_parse_procedure_detail;
         security_procedure_ty           o_security_procedure;
         query_name_procedure_ty         o_query_name_procedure;
         okay_to_close_procedure_ty      o_okay_to_close_procedure;
@@ -429,7 +422,7 @@ struct ob_type_hook_pair {
         open_procedure_ty               o_open_procedure;
         close_procedure_ty              o_close_procedure;
         delete_procedure_ty             o_delete_procedure;
-        parse_procedure_detail_ty       o_parse_procedure_detail;
+        parse_procedure_ty              o_parse_procedure_detail;
         security_procedure_ty           o_security_procedure;
         query_name_procedure_ty         o_query_name_procedure;
         parse_procedure_ty              parse_procedure;
@@ -441,7 +434,7 @@ struct ob_type_hook_pair {
         open_procedure_ty               o_open_procedure;
         close_procedure_ty              o_close_procedure;
         delete_procedure_ty             o_delete_procedure;
-        parse_procedure_detail_ty       o_parse_procedure_detail;
+        parse_procedure_ty              o_parse_procedure_detail;
         security_procedure_ty           o_security_procedure;
         query_name_procedure_ty         o_query_name_procedure;
         okay_to_close_procedure_ty      o_okay_to_close_procedure;

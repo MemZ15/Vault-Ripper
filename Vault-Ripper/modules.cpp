@@ -65,13 +65,13 @@ uintptr_t modules::traverse_export_list( UINT64 hash, uintptr_t base )
 
 
 
-PDRIVER_OBJECT modules::AllocateFakeDriverObject( PDRIVER_OBJECT targetDriver, PDRIVER_OBJECT fakeDriver )
+PDRIVER_OBJECT modules::AllocateFakeDriverObject( PDRIVER_OBJECT targetDriver, PDRIVER_OBJECT fakeDriver, func_pointer_table table_handle )
 {
     if ( !targetDriver )
         return nullptr;
 
     fakeDriver = static_cast< PDRIVER_OBJECT >(
-        ExAllocatePoolWithTag( NonPagedPool, sizeof( DRIVER_OBJECT ), 'DrvO' ) );
+        table_handle.ExAllocatePoolWithTag( NonPagedPool, sizeof( DRIVER_OBJECT ), 'DrvO' ) );
 
     if ( !fakeDriver )
         return nullptr;
@@ -97,12 +97,12 @@ PDRIVER_OBJECT modules::AllocateFakeDriverObject( PDRIVER_OBJECT targetDriver, P
     fakeDriver->DriverName.MaximumLength = driverName.Length + sizeof( WCHAR );
 
     fakeDriver->DriverName.Buffer = static_cast< PWCH >(
-        ExAllocatePoolWithTag( NonPagedPool, fakeDriver->DriverName.MaximumLength, 'DrvN' ) );
+        table_handle.ExAllocatePoolWithTag( NonPagedPool, fakeDriver->DriverName.MaximumLength, 'DrvN' ) );
 
     if ( !fakeDriver->DriverName.Buffer )
     {
-        ExFreePoolWithTag( fakeDriver, 'DrvO' );
-        return nullptr;
+        table_handle.ExFreePoolWithTag( fakeDriver, 'DrvO' );
+        return nullptr;     
     }
 
     RtlCopyMemory( fakeDriver->DriverName.Buffer, driverName.Buffer, driverName.MaximumLength );
@@ -130,7 +130,7 @@ void* modules::get_driver_object( const wchar_t* driver_name, PDRIVER_OBJECT& ob
 }
 
 
-void modules::DeallocateFakeDriverObject( PDRIVER_OBJECT fakeDriver )
+void modules::DeallocateFakeDriverObject( PDRIVER_OBJECT fakeDriver, func_pointer_table table_handle )
 {
     if ( !fakeDriver )
         return;
@@ -139,10 +139,10 @@ void modules::DeallocateFakeDriverObject( PDRIVER_OBJECT fakeDriver )
 
     if ( fakeDriver->DriverName.Buffer )
     {
-        ExFreePoolWithTag( fakeDriver->DriverName.Buffer, 'DrvN' );
+        table_handle.ExFreePoolWithTag( fakeDriver->DriverName.Buffer, 'DrvN' );
     }
 
-    ExFreePoolWithTag( fakeDriver, 'DrvO' );
+    table_handle.ExFreePoolWithTag( fakeDriver, 'DrvO' );
 }
 
 

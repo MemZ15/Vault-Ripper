@@ -9,11 +9,11 @@
 
 #define OBGetObjectType_HASH						0x6246ac8b9eb0daa4
 #define ExAllocatePoolWithTag_HASH					0xe7c4d473c919c038
+#define ExFreePoolWithTag_HASH						0x175d6b13f09b5f2b
 #define PsLookupProcessByProcessId_HASH				0xb7eac87c5d15bdab
 #define PsGetProcessImageFileName_HASH				0xb6824094e0503f10
 #define GetIoDriverObjectType_t_HASH				0xc0892385cfffae01
 #define PsGetProcessPeb_t_HASH						0x3c1a868596349c67
-
 
 namespace globals {
 

