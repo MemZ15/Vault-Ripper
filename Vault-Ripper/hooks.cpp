@@ -75,6 +75,7 @@ object_type* hooks::capture_initalizer_table( uintptr_t base, size_t size, point
 				case 34:
 					hook_metadata.driver.o_parse_procedure_ex_detail = reinterpret_cast< parse_procedure_ex_ty >( obj->type_info.parse_procedure_ex );
 					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->type_info.parse_procedure_ex ), reinterpret_cast< void* >( object_type_init_hooks::hk_parse_procedure_ex ) );
+					DbgPrint( "Value: 0x%p", hook_metadata.driver.o_parse_procedure_ex_detail );
 					break;
 				}
 			}

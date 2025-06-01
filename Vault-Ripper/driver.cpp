@@ -5,34 +5,16 @@
 
 ob_type_hook_pair driver;
 
-NTSTATUS __fastcall object_type_init_hooks::hk_parse_procedure_ex(
-    void* ObjectType,
-    void* Object,
-    ACCESS_STATE* AccessState,
-    char AccessReason,
-    unsigned int HandleCount,
-    UNICODE_STRING* ObjectName,
-    UNICODE_STRING* RemainingName,
-    void* ParseContext,
-    SECURITY_QUALITY_OF_SERVICE* SecurityQos,
-    ob_extended_parse_parameters* ExtendedParameters,
-    void** AdditionalInfo
-) {
+NTSTATUS __fastcall object_type_init_hooks::hk_parse_procedure_ex( VOID* ObjectType, VOID* Object, ACCESS_STATE* AccessState, char AccessReason, unsigned int HandleCount, UNICODE_STRING* ObjectName, UNICODE_STRING* RemainingName, VOID* ParseContext, SECURITY_QUALITY_OF_SERVICE* SecurityQos, ob_extended_parse_parameters* ExtendedParameters, VOID** AdditionalInfo ) {
     
-    if ( !Object )
-        return STATUS_SUCCESS;
+    DbgPrint( "ParseProcedureEx Called\n" );
 
-    // Log info — example, print the object name if available
-    DbgPrint( "[ParseProcedureEx]\n");
-
-
-    // Inspect other params if desired, e.g., AccessReason, ExtendedParameters, etc.
-    return STATUS_SUCCESS;
+    return HandleCount;
 
 }
 
 
-
+// This is a start, need to figure out return param's then iterate on AV based drivers
 
 
 

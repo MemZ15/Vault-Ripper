@@ -1,12 +1,6 @@
 ﻿  Building 'Vault-Ripper' with toolset 'WindowsKernelModeDriver10.0' and the 'Universal' target platform.
   Stamping x64\Debug\Vault-Ripper.inf
-  Stamping [Version] section with DriverVer=05/31/2025,22.33.18.274
-  av.cpp
-  driver.cpp
-  entry.cpp
-  helpers.cpp
-  hooks.cpp
-  modules.cpp
+  Stamping [Version] section with DriverVer=06/01/2025,0.1.52.377
   process.cpp
   thread.cpp
   Generating Code...
