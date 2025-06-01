@@ -26,33 +26,43 @@ uintptr_t modules::throw_idt_exception( uintptr_t& base, size_t& base_size ) {
 
 }
 
-uintptr_t modules::traverse_export_list( const char* module_name, uintptr_t base )
+uintptr_t modules::traverse_export_list( UINT64 hash, uintptr_t base )
 {
+    if ( !base ) return uintptr_t{ 0 };
+
     PIMAGE_DOS_HEADER dosHeader = ( PIMAGE_DOS_HEADER )base;
-    if ( dosHeader->e_magic != 0x5A4D )
-        return NULL;
+    if ( dosHeader->e_magic != 0x5A4D ) return uintptr_t{ 0 };
 
     PIMAGE_NT_HEADERS ntHeaders = ( PIMAGE_NT_HEADERS )( ( PUCHAR )base + dosHeader->e_lfanew );
-    if ( ntHeaders->Signature != 0x00004550 )
-        return NULL;
+    if ( ntHeaders->Signature != 0x00004550 ) return uintptr_t{ 0 };
 
-    PIMAGE_EXPORT_DIRECTORY exportDir = ( PIMAGE_EXPORT_DIRECTORY )( ( PUCHAR )base +
-        ntHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress );
+    DWORD exportVA = ntHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
+    if ( !exportVA ) return uintptr_t{ 0 };
 
+    PIMAGE_EXPORT_DIRECTORY exportDir = ( PIMAGE_EXPORT_DIRECTORY )( base + exportVA );
+    ULONG* nameRvas = ( ULONG* )( base + exportDir->AddressOfNames );
+    USHORT* ordinals = ( USHORT* )( base + exportDir->AddressOfNameOrdinals );
+    ULONG* funcRvas = ( ULONG* )( base + exportDir->AddressOfFunctions );
 
-    ULONG* nameRvas = ( ULONG* )( ( PUCHAR )base + exportDir->AddressOfNames );
-    ULONG* funcRvas = ( ULONG* )( ( PUCHAR )base + exportDir->AddressOfFunctions );
-    USHORT* ordinals = ( USHORT* )( ( PUCHAR )base + exportDir->AddressOfNameOrdinals );
+    for ( ULONG i = 0; i < exportDir->NumberOfNames; ++i ) {
+        auto namePtr = reinterpret_cast< LPCSTR >( base + nameRvas[i] );
+        
+        if ( !namePtr ) continue;
 
-    for ( ULONG i = 0; i < exportDir->NumberOfNames; i++ ) {
-        LPCSTR name = ( LPCSTR )( ( PUCHAR )base + nameRvas[i] );
-        if ( _stricmp( name, module_name ) == 0 ) {
+        size_t nameLen = strnlen( namePtr, 256 ); 
+        if ( nameLen == 0 || nameLen >= 256 ) continue;
+
+        UINT64 exportHash = hash::salted_hash_lpcstr_ci( namePtr, nameLen );
+        
+        if ( exportHash == hash ) {
             ULONG funcRva = funcRvas[ordinals[i]];
             return ( uintptr_t )( ( PUCHAR )base + funcRva );
         }
     }
-    return uintptr_t( 0 );
+
+    return uintptr_t{ 0 };
 }
+
 
 
 PDRIVER_OBJECT modules::AllocateFakeDriverObject( PDRIVER_OBJECT targetDriver, PDRIVER_OBJECT fakeDriver )

@@ -13,16 +13,19 @@ uintptr_t globals::table{};
 void hooks::hook_win_API( uintptr_t base, size_t size, func_pointer_table &table_handle ) {
 
 	table_handle.ObGetObjectType = ( ObGetObjectType_t )
-		modules::traverse_export_list( "ObGetObjectType", base );
+		modules::traverse_export_list( OBGetObjectType_HASH, base );
 
-	table_handle.PsLookupProcessByProcessID = ( PsLookupProcessByProcessId_t )
-		modules::traverse_export_list( "PsLookupProcessByProcessId", base );
+	table_handle.ExAllocatePoolWithTag = ( ExAllocatePoolWithTag_t ) // ExAllocatePoolWithTag_t
+		modules::traverse_export_list( ExAllocatePoolWithTag_HASH, base );
 
-	table_handle.PsGetProcessImageFileName = ( PsGetProcessImageFileName_t )
-		modules::traverse_export_list( "PsGetProcessImageFileName", base );
+	table_handle.PsLookupProcessByProcessID = ( PsLookupProcessByProcessId_t ) 
+		modules::traverse_export_list( PsLookupProcessByProcessId_HASH, base );
 
-	table_handle.GetIoDriverObjectType = ( GetIoDriverObjectType_t )
-		modules::traverse_export_list( "IoDriverObjectType", base );
+	table_handle.PsGetProcessImageFileName = ( PsGetProcessImageFileName_t ) // PsGetProcessImageFileName_t
+		modules::traverse_export_list( PsGetProcessImageFileName_HASH, base );
+
+	table_handle.GetIoDriverObjectType = ( GetIoDriverObjectType_t ) // GetIoDriverObjectType_t
+		modules::traverse_export_list( GetIoDriverObjectType_t_HASH, base );
 
 	table_handle.PsGetNextProcess = ( PsGetNextProcess_t )
 		helpers::pattern_scan( base, size, patterns::PsGetNextProcessPattern, patterns::PsGetNextProcessMask );
@@ -34,7 +37,7 @@ void hooks::hook_win_API( uintptr_t base, size_t size, func_pointer_table &table
 		( ( uintptr_t )table_handle.ObTypeIndexTableInstr, 3, 7 );
 
 	table_handle.PsGetProcessPeb = ( PsGetProcessPeb_t )
-		modules::traverse_export_list( "PsGetProcessPeb", base );
+		modules::traverse_export_list( PsGetProcessPeb_t_HASH, base );
 
 	globals::table = table_handle.ObTypeIndexTable;
 

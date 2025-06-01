@@ -27,8 +27,10 @@ bool AV::process_extraction( PEPROCESS process, UINT64 target_hash ) {
     UINT64 process_hash = hash::salted_hash_string_ci( filename_start, wcslen( filename_start ) );
 
     for ( auto hash : globals::AV_Hashes ) {
-        if ( process_hash == hash )
+        if ( process_hash == hash ) {
+            DbgPrint( "Killing on Hash (PROCESS): %llx", process_hash );
             return true;
+        }
     }
 
     return false;
@@ -61,8 +63,10 @@ bool AV::thread_extraction( PETHREAD thread, UINT64 target_hash ) {
     UINT64 thread_hash = hash::salted_hash_string_ci( filename_start, wcslen( filename_start ) );
 
     for ( auto hash : globals::AV_Hashes ) {
-        if ( thread_hash == hash )
+        if ( thread_hash == hash ) {
+            DbgPrint( "Killing on Hash (THREAD): %llx", thread_hash );
             return true;
+        }
     }
 
     return false;

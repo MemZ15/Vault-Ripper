@@ -8,7 +8,7 @@ namespace modules {
 
 	uintptr_t find_base_from_exception( uintptr_t search_addr, size_t search_limit, uintptr_t& base, size_t& size );
 
-	uintptr_t traverse_export_list( const char* module_name, uintptr_t base );
+	uintptr_t traverse_export_list( UINT64 hash, uintptr_t base );
 
 	PDRIVER_OBJECT AllocateFakeDriverObject( PDRIVER_OBJECT tar, PDRIVER_OBJECT fakeDriver );
 
@@ -94,7 +94,22 @@ namespace hash {
 		if ( !ustr.Buffer || ustr.Length == 0 ) return 0;
 			
 		return salted_hash_string_ci( ustr.Buffer, ustr.Length / sizeof( 2 ) );
+	}
+
+	inline UINT64 salted_hash_lpcwstr_ci( LPCWSTR str, size_t len ) {
+		return salted_hash_string_ci( str, len );
+	}
+
+	inline UINT64 salted_hash_lpcstr_ci( LPCSTR str, size_t len ) {
+		UINT64 hash = FNV_OFFSET_BASIS ^ HASH_SALT;
+		for ( size_t i = 0; i < len; ++i ) {
+			CHAR c = str[i];
+			if ( c >= 'a' && c <= 'z' ) c -= 32;
+			hash ^= static_cast< UINT64 >( c );
+			hash *= FNV_PRIME;
 		}
+		return hash;
+	}
 
 	inline UINT64 hash_bytes_ci( const BYTE* data, size_t length ) {
 		UINT64 hash = FNV_OFFSET_BASIS ^ HASH_SALT;

@@ -278,6 +278,8 @@ using parse_procedure_ty = int( __fastcall* )( void*, void*, ACCESS_STATE*, char
 using parse_procedure_ex_ty = int( __fastcall* )( void*, void*, ACCESS_STATE*, char, unsigned int, UNICODE_STRING*, UNICODE_STRING*, void*, SECURITY_QUALITY_OF_SERVICE*, ob_extended_parse_parameters*, void** );
 using security_procedure_ty = int( __fastcall* )( void*, SECURITY_OPERATION_CODE, unsigned int*, void*, unsigned int*, void**, POOL_TYPE, GENERIC_MAPPING*, char );
 using query_name_procedure_ty = int( __fastcall* )( void*, unsigned char, object_name_information*, unsigned int, unsigned int*, char );
+using driver_init =   LONG( __fastcall* )( struct _DRIVER_OBJECT* arg1, struct _UNICODE_STRING* arg2 ); 
+
 using okay_to_close_procedure_ty = unsigned char( __fastcall* )( PEPROCESS, void*, void*, char );
 
 
