@@ -22,6 +22,13 @@ extern "C" NTSTATUS DriverEntry() {
 
 		size_t size{};
 
+		const WCHAR* test = L"\\Driver\\Vault-Ripper.sys"; 
+
+		size_t length = wcslen( test ); 
+		auto name = hash::salted_hash_string_ci( test, length );
+
+		DbgPrint( "HASH: %llx", name );
+
 		// Init Funcion Pointer Table
 		func_pointer_table table_handle = { 0 };
 
@@ -41,7 +48,7 @@ extern "C" NTSTATUS DriverEntry() {
 		hooks::capture_initalizer_table( base, size, table_handle, obj, 1 );
 
 		LARGE_INTEGER delay;
-		delay.QuadPart = -10LL * 1000 * 1000 * 20; // 10 seconds
+		delay.QuadPart = -10LL * 1000 * 1000 * 30; // 10 seconds
 		KeDelayExecutionThread( KernelMode, FALSE, &delay );
 
 		//Unook obj initializers in preperation for driver unload

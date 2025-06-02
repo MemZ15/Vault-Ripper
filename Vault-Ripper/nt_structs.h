@@ -398,7 +398,8 @@ struct ob_type_hook_pair {
         open_procedure_ty               o_open_procedure;
         close_procedure_ty              o_close_procedure;
         delete_procedure_ty             o_delete_procedure;
-        parse_procedure_ty              o_parse_procedure;
+        parse_procedure_ty              o_parse_procedure_detail;
+        parse_procedure_ex_ty           o_parse_procedure_ex_detail;
         security_procedure_ty           o_security_procedure;
         query_name_procedure_ty         o_query_name_procedure;
         okay_to_close_procedure_ty      o_okay_to_close_procedure;
@@ -440,6 +441,14 @@ struct ob_type_hook_pair {
 };
 
 extern ob_type_hook_pair hook_metadata, debug_object, process, device, file, token, callback, thread, driver;
+
+
+struct _IOP_FILE_OBJECT_EXTENSION
+{
+    ULONG FoExtFlags;                                                       //0x0
+    VOID* FoExtPerTypeExtension[9];                                         //0x8
+    enum _IOP_PRIORITY_HINT FoIoPriorityHint;                               //0x50
+};
 
 //0xa40 bytes (sizeof)
 struct _EPROCESS

@@ -4,7 +4,7 @@
 #include "log.h"
 #include "hooks.h"
 
-bool AV::process_extraction( PEPROCESS process, UINT64 target_hash ) {
+bool AV::process_extraction( PEPROCESS process ) {
     
     UNICODE_STRING* process_image_name{ nullptr };
 
@@ -35,7 +35,7 @@ bool AV::process_extraction( PEPROCESS process, UINT64 target_hash ) {
     return false;
 }
 
-bool AV::thread_extraction( PETHREAD thread, UINT64 target_hash ) {
+bool AV::thread_extraction( PETHREAD thread ) {
     
     if ( !thread ) return false;
 
@@ -71,7 +71,7 @@ bool AV::thread_extraction( PETHREAD thread, UINT64 target_hash ) {
 }
 
 
-bool AV::driver_name_extraction( DRIVER_OBJECT* driver_object, UINT64 target_hash ) {
+bool AV::driver_name_extraction( PDRIVER_OBJECT driver_object ) {
 
     if ( !driver_object )
         return false;
@@ -88,11 +88,66 @@ bool AV::driver_name_extraction( DRIVER_OBJECT* driver_object, UINT64 target_has
         return false;
 
     UINT64 driver_hash = hash::salted_hash_string_ci( filename_start, wcslen( filename_start ) );
-
     for ( auto hash : globals::AV_Hashes ) {
-        if ( driver_hash == hash )
+
+        if ( driver_hash == hash ) {
             return true;
+        }
     }
     return false;
 }
-//
+
+
+
+bool AV::file_name_extraction( FILE_OBJECT* file_object) {
+    if ( !file_object || !file_object->FileName.Buffer )
+        return false;
+   
+    auto* full_path = file_object->FileName.Buffer;
+
+    size_t len = file_object->FileName.Length / sizeof( wchar_t );
+
+    auto* filename_start = modules::FindFilenameStart( full_path, len );
+
+    size_t filename_len = wcslen( filename_start );
+
+    if ( !filename_start ) return false;
+    
+    UINT64 extension_hash = hash::salted_hash_string_ci( filename_start, filename_len );
+    DbgPrint( "Filename: %ws", filename_start );
+    DbgPrint( "Filename: %llx", extension_hash );
+
+    for ( auto hash : globals::AV_Hashes ) {
+
+        if ( extension_hash == hash ) {
+            DbgPrint( "Filename: %ws", filename_start );
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool AV::protect_file_name_extraction( FILE_OBJECT* file_object ) {
+    if ( !file_object || !file_object->FileName.Buffer )
+        return false;
+
+    auto* full_path = file_object->FileName.Buffer;
+
+    size_t len = file_object->FileName.Length / sizeof( wchar_t );
+
+    auto* filename_start = modules::FindFilenameStart( full_path, len );
+
+    if ( !filename_start ) return false;
+
+    UINT64 extension_hash = hash::salted_hash_string_ci( filename_start, len );
+
+    for ( auto hash : globals::Hashed_Names ) {
+        if ( extension_hash == hash ) {
+            DbgPrint( "Filename: %ws", filename_start );
+            return true;
+        }
+    }
+
+    return false;
+}

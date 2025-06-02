@@ -11,6 +11,7 @@ ob_type_hook_pair hook_metadata = { 0 };
 uintptr_t globals::stored_one{ 0 };
 _OBJECT_TYPE* globals::stored_two{ nullptr };
 
+
 void hooks::hook_win_API( uintptr_t base, size_t size, func_pointer_table &table_handle ) {
 
 	table_handle.ObGetObjectType = ( ObGetObjectType_t )
@@ -74,10 +75,12 @@ _OBJECT_TYPE* hooks::capture_initalizer_table( uintptr_t base, size_t size, poin
 					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.open_procedure ), reinterpret_cast< void* >( object_type_init_hooks::hk_thread_open_procedure ) );
 					break;
 				case 34:
-					globals::stored_two = reinterpret_cast< _OBJECT_TYPE* >( *reinterpret_cast< uintptr_t* >( reinterpret_cast< uint8_t* >( ob_type_index_table_base ) + ( index * sizeof( uintptr_t ) ) ) );
 					hook_metadata.driver.o_parse_procedure_ex_detail = reinterpret_cast< parse_procedure_ex_ty >( obj->TypeInfo.parse_procedure_ex );
-					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.parse_procedure_ex ), reinterpret_cast< void* >( object_type_init_hooks::hk_parse_procedure_ex ) );
-					DbgPrint( "Value: 0x%p", hook_metadata.driver.o_parse_procedure_ex_detail );
+					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.parse_procedure_ex ), reinterpret_cast< void* >( object_type_init_hooks::hk_driver_parse_procedure_ex ) );
+					break;
+				case 37:
+					hook_metadata.file.o_parse_procedure_ex_detail = reinterpret_cast< parse_procedure_ex_ty >( obj->TypeInfo.parse_procedure_ex );
+					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.parse_procedure_ex ), reinterpret_cast< void* >( object_type_init_hooks::hk_file_parse_procedure_ex ) );
 					break;
 				}
 			}
@@ -98,6 +101,9 @@ _OBJECT_TYPE* hooks::capture_initalizer_table( uintptr_t base, size_t size, poin
 				case 34:
 					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.parse_procedure_ex ), reinterpret_cast< void* >( hook_metadata.driver.o_parse_procedure_ex_detail ) );
 					break;
+				case 37:
+					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.parse_procedure_ex ), reinterpret_cast< void* >( hook_metadata.file.o_parse_procedure_ex_detail ) );
+					break;
 				}
 			}
 		}
@@ -109,20 +115,3 @@ _OBJECT_TYPE* hooks::capture_initalizer_table( uintptr_t base, size_t size, poin
 }
 
 
-_OBJECT_TYPE* object_type_init_hooks::get_object( _OBJECT_TYPE* obj ) {
-
-	auto ob_type_index_table_base = globals::stored_one;
-
-	_OBJECT_HEADER* object_header = reinterpret_cast< _OBJECT_HEADER* >( reinterpret_cast< uint8_t* >( obj ) - sizeof( _OBJECT_HEADER ) );
-
-	auto get_object_by_index = [ob_type_index_table_base]( size_t idx ) -> _OBJECT_TYPE* {
-
-		uintptr_t object_address = ob_type_index_table_base + ( idx * sizeof( uintptr_t ) );
-
-		return reinterpret_cast< _OBJECT_TYPE* >( *reinterpret_cast< uintptr_t* >( object_address ) );
-	};
-
-	return obj;
-}
-
-	//FILE OBJECT needs to be hooked, and parsed?

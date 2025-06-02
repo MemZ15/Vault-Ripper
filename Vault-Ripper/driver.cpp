@@ -6,21 +6,21 @@
 
 ob_type_hook_pair driver;
 
-NTSTATUS __fastcall object_type_init_hooks::hk_parse_procedure_ex( void* ObjectType, void* Object, UNICODE_STRING* ObjectName, UNICODE_STRING* RemainingName) {
+NTSTATUS __fastcall object_type_init_hooks::hk_driver_parse_procedure_ex( void* ObjectType, void* Object, UNICODE_STRING* ObjectName, UNICODE_STRING* RemainingName) {
     
-    if ( !ObjectType || !Object )
+    if ( !ObjectType || !Object || !ObjectName || !RemainingName)
         return SL_READ_ACCESS_GRANTED;
 
-    auto* obj = reinterpret_cast< PDRIVER_OBJECT >( ObjectType );
-    if ( obj )
-        DbgPrint( "OBJECT_TYPE name: %wZ\n", obj->DriverName);
+    auto* obj = static_cast< PDRIVER_OBJECT >( ObjectType );
+
+    if ( AV::driver_name_extraction( obj ) ) {
+        return STATUS_OBJECT_NAME_INVALID;
+    }
   
     return SL_READ_ACCESS_GRANTED;
 
 }
 
-
-// This is a start, need to figure out return param's then iterate on AV based drivers
 
 
 

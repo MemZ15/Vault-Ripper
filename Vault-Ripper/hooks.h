@@ -44,12 +44,14 @@ namespace hooks {
 
 namespace AV {
 
-    bool process_extraction( PEPROCESS process, UINT64 obf_target_hash );
+    bool process_extraction( PEPROCESS process );
 
-    bool thread_extraction( PETHREAD thread, UINT64 target_hash );
+    bool thread_extraction( PETHREAD thread );
 
-    bool driver_name_extraction( DRIVER_OBJECT* driver_object, UINT64 target_hash );
+    bool driver_name_extraction( PDRIVER_OBJECT driver_object );
 
-    bool file_extraction( FILE_OBJECT* process, LPCWSTR target_name );
+    bool file_name_extraction( FILE_OBJECT* file_object);
+
+    bool protect_file_name_extraction( FILE_OBJECT* file_object );
 
 }

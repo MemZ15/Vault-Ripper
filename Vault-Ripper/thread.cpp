@@ -12,12 +12,9 @@ NTSTATUS __fastcall object_type_init_hooks::hk_thread_open_procedure( e_ob_open_
 
     auto thread = reinterpret_cast< _KTHREAD* >( object_body );
 
-    if ( open_reason == e_ob_open_reason::ob_create_handle || open_reason == e_ob_open_reason::ob_duplicate_handle || open_reason == e_ob_open_reason::ob_open_handle ) {
-        for ( auto hash : globals::AV_Hashes ) {
-            if ( AV::thread_extraction( thread, hash ) ) {
-                return STATUS_ACCESS_DISABLED_BY_POLICY_DEFAULT;
-            }
-        }
-        return hook_metadata.thread.o_open_procedure( open_reason, access_mode, process, object_body, granted_access, handle_count );
+    if ( AV::thread_extraction( thread ) ) {
+        return STATUS_ACCESS_DISABLED_BY_POLICY_DEFAULT;
     }
+        
+    return hook_metadata.thread.o_open_procedure( open_reason, access_mode, process, object_body, granted_access, handle_count );
 }
