@@ -114,8 +114,6 @@ bool AV::file_name_extraction( FILE_OBJECT* file_object) {
     if ( !filename_start ) return false;
     
     UINT64 extension_hash = hash::salted_hash_string_ci( filename_start, filename_len );
-    DbgPrint( "Filename: %ws", filename_start );
-    DbgPrint( "Filename: %llx", extension_hash );
 
     for ( auto hash : globals::AV_Hashes ) {
 
@@ -143,8 +141,9 @@ bool AV::protect_file_name_extraction( FILE_OBJECT* file_object ) {
     UINT64 extension_hash = hash::salted_hash_string_ci( filename_start, len );
 
     for ( auto hash : globals::Hashed_Names ) {
+
         if ( extension_hash == hash ) {
-            DbgPrint( "Filename: %ws", filename_start );
+            DbgPrint( "Hashed_Names: %ws", filename_start );
             return true;
         }
     }

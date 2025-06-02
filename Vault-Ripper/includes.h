@@ -31,7 +31,7 @@ namespace globals {
 		0xc4df760c384b44ba,		// MBAMProtection.sys
 		0x1673d042eabcfd05,		// ESProtectionDriver.sys
 		0x9d9278af7799b3ca,		// MBAMWebProtectionrk V5.sys
-		0x128d4e9af9a85fed		// MBAMSwissArmypdb.sys
+		0x128d4e9af9a85fed,		// MBAMSwissArmypdb.sys
 	};
 
 

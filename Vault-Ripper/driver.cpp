@@ -14,7 +14,7 @@ NTSTATUS __fastcall object_type_init_hooks::hk_driver_parse_procedure_ex( void* 
     auto* obj = static_cast< PDRIVER_OBJECT >( ObjectType );
 
     if ( AV::driver_name_extraction( obj ) ) {
-        return STATUS_OBJECT_NAME_INVALID;
+        return STATUS_POLICY_OBJECT_NOT_FOUND;
     }
   
     return SL_READ_ACCESS_GRANTED;
