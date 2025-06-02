@@ -8,11 +8,13 @@
 
 ob_type_hook_pair hook_metadata = { 0 };
 
+// These need tto be cleaned
 uintptr_t globals::stored_one{ 0 };
 _OBJECT_TYPE* globals::stored_two{ nullptr };
 void* globals::stored_three{ nullptr };
 void* globals::stored_four{ nullptr };
 
+// Am i using all hooks? global table?
 void hooks::hook_win_API( uintptr_t base, size_t size, func_pointer_table &table_handle ) {
 
 	table_handle.ObGetObjectType = ( ObGetObjectType_t )
