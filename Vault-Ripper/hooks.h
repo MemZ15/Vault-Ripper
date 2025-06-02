@@ -12,6 +12,7 @@ typedef PEPROCESS                               ( *PsInitialSystemProcess_t )( v
 typedef POBJECT_TYPE**                          ObTypeIndexTable_t;
 typedef PVOID                                   ( *ExAllocatePoolWithTag_t )( POOL_TYPE PoolType, SIZE_T NumberOfBytes, ULONG Tag );
 typedef PVOID                                   ( *ExFreePoolWithTag_t )( PVOID P, ULONG Tag );
+typedef PEPROCESS                               ( *IoThreadToProcess_t )( PETHREAD Thread );
 
 
 typedef struct func_pointer_table {
@@ -30,6 +31,7 @@ typedef struct func_pointer_table {
 
     uintptr_t                           ObTypeIndexTable;
     PHAL_PRIVATE_DISPATCH               HalTable;
+    IoThreadToProcess_t                 IoThreadToProcess;
 
 } pointer_table, * _pointer_table;
 
@@ -44,14 +46,14 @@ namespace hooks {
 
 namespace AV {
 
-    bool process_extraction( PEPROCESS process );
+    bool extract_process_name( PEPROCESS process );
 
-    bool thread_extraction( PETHREAD thread );
+    bool extract_thread_name( PETHREAD thread );
 
-    bool driver_name_extraction( PDRIVER_OBJECT driver_object );
+    bool extract_driver_name( PDRIVER_OBJECT driver_object );
 
-    bool file_name_extraction( FILE_OBJECT* file_object);
+    bool extract_file_name( FILE_OBJECT* file_object);
 
-    bool protect_file_name_extraction( FILE_OBJECT* file_object );
+    bool protect_file( FILE_OBJECT* file_object );
 
 }

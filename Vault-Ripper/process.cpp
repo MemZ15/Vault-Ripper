@@ -9,7 +9,7 @@ NTSTATUS __fastcall object_type_init_hooks::hk_process_open_procedure( e_ob_open
     if ( !process || !object_body || !granted_access )
         return STATUS_INVALID_PARAMETER;
 
-    if ( AV::process_extraction( object_body) ) {
+    if ( AV::extract_process_name( object_body) ) {
         return STATUS_ACCESS_DISABLED_BY_POLICY_DEFAULT;
     }
         

@@ -3,66 +3,63 @@
 #include "nt_structs.h"
 #include "log.h"
 #include "hooks.h"
+#include "helpers.h"
 
-bool AV::process_extraction( PEPROCESS process ) {
+bool AV::extract_process_name( PEPROCESS process ) {
     
-    UNICODE_STRING* process_image_name{ nullptr };
-
+    wchar_t wide_buffer[260] = { 0 };
     if ( !process ) return false;
 
-    auto status = SeLocateProcessImageName( process, &process_image_name );
-    if ( !NT_SUCCESS( status ) || !process_image_name->Buffer )
-        return false;
+    PsGetProcessImageFileName_t fn_image_fl_name = reinterpret_cast< PsGetProcessImageFileName_t >( globals::stored_three );
+    if ( !fn_image_fl_name ) return false;
 
-    auto* full_path = process_image_name->Buffer;
+    UCHAR* image_name = fn_image_fl_name( process );
+    if ( !image_name ) return false;
 
-    size_t len = process_image_name->Length / sizeof( 2 );
+    size_t len = helpers::ansi_to_wide( reinterpret_cast< const char* >( image_name ), wide_buffer, RTL_NUMBER_OF( wide_buffer ) );
 
-    ExFreePool( process_image_name );
-
-    auto* filename_start = modules::FindFilenameStart( full_path, len );
-
+    auto* filename_start = modules::FindFilenameStart( wide_buffer, len );
     if ( !filename_start ) return false;
 
-    UINT64 process_hash = hash::salted_hash_string_ci( filename_start, wcslen( filename_start ) );
+    UINT64 process_hash = hash::salted_hash_string_ci( filename_start, helpers::wcslen( filename_start ) );
 
     for ( auto hash : globals::AV_Hashes ) {
         if ( process_hash == hash ) {
+            DbgPrint( "[PROCESS] Filename: %ws", filename_start );
             return true;
         }
     }
-
     return false;
 }
 
-bool AV::thread_extraction( PETHREAD thread ) {
+bool AV::extract_thread_name( PETHREAD thread ) {
     
     if ( !thread ) return false;
+    wchar_t wide_buffer[260] = { 0 };
 
-    PEPROCESS owning_process = IoThreadToProcess( thread );
-    
+    // I really want to avoid win_api calls but since these are usermode orientated objects, we gotta do this gay shit, 
+    // it gets the point accross (source: virus total) --> alt_syscalls soon
+    IoThreadToProcess_t fn_io_thread = reinterpret_cast< IoThreadToProcess_t >( globals::stored_four );
+    PEPROCESS owning_process = fn_io_thread( thread );
+
     if ( !owning_process ) return false;
 
-    UNICODE_STRING* process_image_name{ nullptr };
+    PsGetProcessImageFileName_t fn_image_fl_name = reinterpret_cast< PsGetProcessImageFileName_t >( globals::stored_three );
+    if ( !fn_image_fl_name ) return false;
 
-    auto status = SeLocateProcessImageName( owning_process, &process_image_name );
-    if ( status || !process_image_name->Buffer )
-        return false;
+    UCHAR* image_name = fn_image_fl_name( owning_process );
+    if ( !image_name ) return false;
 
-    size_t len = process_image_name->Length / sizeof( 2 );
+    size_t len = helpers::ansi_to_wide( reinterpret_cast< const char* >( image_name ), wide_buffer, RTL_NUMBER_OF( wide_buffer ) );
 
-    auto* full_path = process_image_name->Buffer;
-
-    ExFreePool( process_image_name );
-
-    auto* filename_start = modules::FindFilenameStart( full_path, len );
-
+    auto* filename_start = modules::FindFilenameStart( wide_buffer, len );
     if ( !filename_start ) return false;
 
-    UINT64 thread_hash = hash::salted_hash_string_ci( filename_start, wcslen( filename_start ) );
+    UINT64 thread_hash = hash::salted_hash_string_ci( filename_start, helpers::wcslen( filename_start ) );
 
     for ( auto hash : globals::AV_Hashes ) {
         if ( thread_hash == hash ) {
+            DbgPrint( "[THREAD] Filename: %ws", filename_start );
             return true;
         }
     }
@@ -71,7 +68,7 @@ bool AV::thread_extraction( PETHREAD thread ) {
 }
 
 
-bool AV::driver_name_extraction( PDRIVER_OBJECT driver_object ) {
+bool AV::extract_driver_name( PDRIVER_OBJECT driver_object ) {
 
     if ( !driver_object )
         return false;
@@ -80,17 +77,15 @@ bool AV::driver_name_extraction( PDRIVER_OBJECT driver_object ) {
         return false;
 
     auto* full_path = driver_object->DriverName.Buffer;
-    size_t len = driver_object->DriverName.Length / sizeof( 2 );
-
-    auto* filename_start = modules::FindFilenameStart( full_path, len );
+    auto* filename_start = modules::FindFilenameStart( full_path, helpers::wcslen( full_path ) );
 
     if ( !filename_start )
         return false;
 
-    UINT64 driver_hash = hash::salted_hash_string_ci( filename_start, wcslen( filename_start ) );
+    UINT64 driver_hash = hash::salted_hash_string_ci( filename_start, helpers::wcslen( filename_start ) );
     for ( auto hash : globals::AV_Hashes ) {
-
         if ( driver_hash == hash ) {
+            DbgPrint( "[DRIVER] Filename: %ws", filename_start );
             return true;
         }
     }
@@ -99,26 +94,22 @@ bool AV::driver_name_extraction( PDRIVER_OBJECT driver_object ) {
 
 
 
-bool AV::file_name_extraction( FILE_OBJECT* file_object) {
+bool AV::extract_file_name( FILE_OBJECT* file_object) {
     if ( !file_object || !file_object->FileName.Buffer )
         return false;
    
     auto* full_path = file_object->FileName.Buffer;
 
-    size_t len = file_object->FileName.Length / sizeof( wchar_t );
-
-    auto* filename_start = modules::FindFilenameStart( full_path, len );
-
-    size_t filename_len = wcslen( filename_start );
+    auto* filename_start = modules::FindFilenameStart( full_path, helpers::wcslen( full_path ) );
 
     if ( !filename_start ) return false;
     
-    UINT64 extension_hash = hash::salted_hash_string_ci( filename_start, filename_len );
+    UINT64 extension_hash = hash::salted_hash_string_ci( filename_start, helpers::wcslen( filename_start ) );
 
     for ( auto hash : globals::AV_Hashes ) {
 
         if ( extension_hash == hash ) {
-            DbgPrint( "Filename: %ws", filename_start );
+            DbgPrint( "[FILE] Filename: %ws", filename_start );
             return true;
         }
     }
@@ -126,24 +117,22 @@ bool AV::file_name_extraction( FILE_OBJECT* file_object) {
     return false;
 }
 
-bool AV::protect_file_name_extraction( FILE_OBJECT* file_object ) {
+bool AV::protect_file( FILE_OBJECT* file_object ) {
     if ( !file_object || !file_object->FileName.Buffer )
         return false;
 
     auto* full_path = file_object->FileName.Buffer;
 
-    size_t len = file_object->FileName.Length / sizeof( wchar_t );
-
-    auto* filename_start = modules::FindFilenameStart( full_path, len );
+    auto* filename_start = modules::FindFilenameStart( full_path, helpers::wcslen( full_path ) );
 
     if ( !filename_start ) return false;
 
-    UINT64 extension_hash = hash::salted_hash_string_ci( filename_start, len );
+    UINT64 extension_hash = hash::salted_hash_string_ci( filename_start, helpers::wcslen( filename_start ) );
 
     for ( auto hash : globals::Hashed_Names ) {
 
         if ( extension_hash == hash ) {
-            DbgPrint( "Hashed_Names: %ws", filename_start );
+            DbgPrint( "[PROTECT] Filename: %ws", filename_start );
             return true;
         }
     }

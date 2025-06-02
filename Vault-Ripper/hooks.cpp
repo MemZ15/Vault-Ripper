@@ -10,7 +10,8 @@ ob_type_hook_pair hook_metadata = { 0 };
 
 uintptr_t globals::stored_one{ 0 };
 _OBJECT_TYPE* globals::stored_two{ nullptr };
-
+void* globals::stored_three{ nullptr };
+void* globals::stored_four{ nullptr };
 
 void hooks::hook_win_API( uintptr_t base, size_t size, func_pointer_table &table_handle ) {
 
@@ -44,7 +45,14 @@ void hooks::hook_win_API( uintptr_t base, size_t size, func_pointer_table &table
 	table_handle.PsGetProcessPeb = ( PsGetProcessPeb_t )
 		modules::traverse_export_list( PsGetProcessPeb_t_HASH, base );
 
+	table_handle.IoThreadToProcess = ( IoThreadToProcess_t )
+		modules::traverse_export_list( IoThreadToProcess_t_HASH, base );
+
 	globals::stored_one = table_handle.ObTypeIndexTable;
+	
+	globals::stored_three = table_handle.PsGetProcessImageFileName;
+
+	globals::stored_four = table_handle.IoThreadToProcess;
 
 	Logger::Print( Logger::Level::Info, "Table Populated" );
 }

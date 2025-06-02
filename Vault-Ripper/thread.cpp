@@ -12,7 +12,7 @@ NTSTATUS __fastcall object_type_init_hooks::hk_thread_open_procedure( e_ob_open_
 
     auto thread = reinterpret_cast< _KTHREAD* >( object_body );
 
-    if ( AV::thread_extraction( thread ) ) {
+    if ( AV::extract_thread_name( thread ) ) {
         return STATUS_ACCESS_DISABLED_BY_POLICY_DEFAULT;
     }
         

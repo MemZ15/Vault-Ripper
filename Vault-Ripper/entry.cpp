@@ -22,13 +22,6 @@ extern "C" NTSTATUS DriverEntry() {
 
 		size_t size{};
 
-		const WCHAR* test = L"\\Driver\\Vault-Ripper.sys"; 
-
-		size_t length = wcslen( test ); 
-		auto name = hash::salted_hash_string_ci( test, length );
-
-		DbgPrint( "HASH: %llx", name );
-
 		// Init Funcion Pointer Table
 		func_pointer_table table_handle = { 0 };
 

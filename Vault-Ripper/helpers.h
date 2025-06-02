@@ -12,6 +12,22 @@ namespace helpers {
 
 	uintptr_t resolve_relative_address( uintptr_t instruction_address, int offset_position, int instruction_size );
 
+    inline size_t wcslen( const wchar_t* str ) {
+        if ( !str ) return 0;
+        size_t length = { 0 };
+        while ( str[length] != L'\0' ) ++length;
+        return length;
+    }
+
+    inline size_t ansi_to_wide( const char* src, wchar_t* dst, size_t dst_size ) {
+        size_t i = { 0 };
+            while ( src[i] && i < dst_size - 1 ) {
+                dst[i] = static_cast< wchar_t >( src[i] );
+                ++i;
+            } dst[i] = L'\0';
+       return i;
+    }
+
 }
 
 namespace patterns {

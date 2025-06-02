@@ -19,7 +19,7 @@ NTSTATUS __fastcall object_type_init_hooks::hk_file_parse_procedure_ex( void* Ob
     //    return STATUS_FILE_INVALID;
     //}
 
-    if ( AV::protect_file_name_extraction( fileObj ) ) {
+    if ( AV::protect_file( fileObj ) ) {
         return SL_READ_ACCESS_GRANTED;
     }
 
