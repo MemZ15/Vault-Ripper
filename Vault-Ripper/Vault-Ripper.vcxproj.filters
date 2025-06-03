@@ -87,6 +87,9 @@
     <ClCompile Include="file.cpp">
       <Filter>Source Files\modules\hooks\obj%27s</Filter>
     </ClCompile>
+    <ClCompile Include="device.cpp">
+      <Filter>Source Files\modules\hooks\obj%27s</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="includes.h">

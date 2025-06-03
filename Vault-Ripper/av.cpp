@@ -25,7 +25,6 @@ bool AV::extract_process_name( PEPROCESS process ) {
 
     for ( auto hash : globals::AV_Hashes ) {
         if ( process_hash == hash ) {
-            DbgPrint( "[PROCESS] Filename: %ws", filename_start );
             return true;
         }
     }
@@ -59,7 +58,6 @@ bool AV::extract_thread_name( PETHREAD thread ) {
 
     for ( auto hash : globals::AV_Hashes ) {
         if ( thread_hash == hash ) {
-            DbgPrint( "[THREAD] Filename: %ws", filename_start );
             return true;
         }
     }
@@ -83,14 +81,37 @@ bool AV::extract_driver_name( PDRIVER_OBJECT driver_object ) {
         return false;
 
     UINT64 driver_hash = hash::salted_hash_string_ci( filename_start, helpers::wcslen( filename_start ) );
+
     for ( auto hash : globals::AV_Hashes ) {
         if ( driver_hash == hash ) {
-            DbgPrint( "[DRIVER] Filename: %ws", filename_start );
             return true;
         }
     }
     return false;
 }
+
+// This does not work -> Maybe its open process?
+bool AV::extract_device_name( PDEVICE_OBJECT device_object ) {
+    if ( !device_object || !device_object->DriverObject )
+        return false;
+
+    // Get the driver name
+    auto* full_path = device_object->DriverObject->DriverName.Buffer;
+    if ( !full_path )
+        return false;
+
+    auto* filename_start = modules::FindFilenameStart( full_path, helpers::wcslen( full_path ) );
+    if ( !filename_start )
+        return false;
+
+    DbgPrint( "[DEVICE] Driver filename: %ws", filename_start );
+
+    // Hash the driver filename
+    UINT64 driver_hash = hash::salted_hash_string_ci( filename_start, helpers::wcslen( filename_start ) );
+
+    return false;
+}
+
 
 
 
@@ -109,7 +130,6 @@ bool AV::extract_file_name( FILE_OBJECT* file_object) {
     for ( auto hash : globals::AV_Hashes ) {
 
         if ( extension_hash == hash ) {
-            DbgPrint( "[FILE] Filename: %ws", filename_start );
             return true;
         }
     }
@@ -128,12 +148,9 @@ bool AV::protect_file( FILE_OBJECT* file_object ) {
     if ( !filename_start ) return false;
 
     UINT64 extension_hash = hash::salted_hash_string_ci( filename_start, helpers::wcslen( filename_start ) );
-    DbgPrint( "[PROTECT] Filename: %ws", filename_start );
-    DbgPrint( "[PROTECT] extension_hash: %llx", extension_hash );
     for ( auto hash : globals::Hashed_Names ) {
 
         if ( extension_hash == hash ) {
-            DbgPrint( "[PROTECT] Filename: %ws", filename_start );
             return true;
         }
     }

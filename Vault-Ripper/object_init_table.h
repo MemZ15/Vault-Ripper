@@ -12,6 +12,8 @@ namespace object_type_init_hooks {
 
 	NTSTATUS __fastcall hk_driver_parse_procedure_ex( void* ObjectType, void* Object, UNICODE_STRING* ObjectName, UNICODE_STRING* RemainingName );
 
+	NTSTATUS __fastcall hk_device_parse_procedure_ex( void* ObjectType, void* Object, UNICODE_STRING* ObjectName, UNICODE_STRING* RemainingName );
+
 	NTSTATUS __fastcall hk_file_parse_procedure_ex( void* ObjectType, void* Object, UNICODE_STRING* ObjectName, UNICODE_STRING* RemainingName );
 
 }

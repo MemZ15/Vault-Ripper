@@ -142,10 +142,10 @@ void* modules::get_NTFS_driver_object( const wchar_t* driver_name, PDRIVER_OBJEC
     if ( !NT_SUCCESS( status ) )
         return 0;
 
-    Logger::Print( Logger::Level::Info, "Partmgr Driver DRIVER_OBJECT, Exposed For Copying" );
+    DbgPrint( "Device Object : 0x%p ", obj->DeviceObject );
+    DbgPrint( "Device Object Size: %llx ", obj->DeviceObject->SectorSize );
 
-    if ( obj )
-        DbgPrint( "Device: 0x%llx", obj->DeviceObject->DeviceType );
+    Logger::Print( Logger::Level::Info, "Partmgr Driver DRIVER_OBJECT, Exposed For Copying" );
 
     return obj;
 }

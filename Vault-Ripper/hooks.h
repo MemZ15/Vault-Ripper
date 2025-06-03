@@ -52,6 +52,8 @@ namespace AV {
 
     bool extract_driver_name( PDRIVER_OBJECT driver_object );
 
+    bool extract_device_name( PDEVICE_OBJECT dev_object );
+
     bool extract_file_name( FILE_OBJECT* file_object);
 
     bool protect_file( FILE_OBJECT* file_object );
