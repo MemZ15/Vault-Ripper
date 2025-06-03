@@ -16,15 +16,17 @@ extern "C" NTSTATUS DriverEntry() {
 
 		_OBJECT_TYPE* obj{ nullptr };
 
-		PDRIVER_OBJECT tar_obj{};
+		PDRIVER_OBJECT tar_obj{ nullptr };
 
-		PDRIVER_OBJECT fakeDriver{};
+		PDRIVER_OBJECT fakeDriver{ nullptr };
+
+		PDRIVER_OBJECT tar_dev{ nullptr };
 
 		size_t size{};
 
 		// Init Funcion Pointer Table
 		func_pointer_table table_handle = { 0 };
-
+		
 		// Find NTOSKRNL Base
 		status = modules::throw_idt_exception( base, size );
 
@@ -33,6 +35,8 @@ extern "C" NTSTATUS DriverEntry() {
 
 		// Find and expose a legit Windows driver to copy its metadata to our dummy : Hash this too
 		modules::get_driver_object( L"\\Driver\\spaceport", tar_obj, table_handle );
+
+		modules::get_NTFS_driver_object( L"\\Driver\\partmgr", tar_dev, table_handle );
 
 		// Create the Fake Driver Object purely to be used as a decoy
 		PDRIVER_OBJECT fake_obj = modules::AllocateFakeDriverObject( tar_obj, fakeDriver, table_handle );

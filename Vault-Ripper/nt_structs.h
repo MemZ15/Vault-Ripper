@@ -3,6 +3,7 @@
 
 #define IMAGE_NUMBEROF_DIRECTORY_ENTRIES 16
 #define IMAGE_DIRECTORY_ENTRY_EXPORT 0
+typedef unsigned short WORD;
 
 #pragma pack(push, 1)
 
@@ -102,6 +103,89 @@ typedef struct _IDTR {
     USHORT Limit;
     ULONG64 Base;
 } IDTR, * PIDTR;
+
+typedef struct _NTFS_BOOT_SECTOR {
+    BYTE Jump[3];                     // 0x00: Jump instruction
+    BYTE OEMID[8];                    // 0x03: "NTFS    "
+
+    WORD BytesPerSector;             // 0x0B: Usually 512
+    BYTE SectorsPerCluster;          // 0x0D: E.g., 8
+    WORD ReservedSectors;            // 0x0E: Always 0 for NTFS
+    BYTE Zeros1[3];                  // 0x10: Always 0
+    WORD NotUsed1;                   // 0x13: Always 0
+    BYTE MediaDescriptor;            // 0x15: F8 = hard disk
+    WORD Zeros2;                     // 0x16: Always 0
+    WORD SectorsPerTrack;            // 0x18: CHS geometry (legacy)
+    WORD NumberOfHeads;             // 0x1A: CHS geometry (legacy)
+    DWORD HiddenSectors;            // 0x1C: Hidden sectors before this partition
+    DWORD NotUsed2;                 // 0x20: Always 0
+
+    DWORD NotUsed3;                 // 0x24: Always 0
+    LONGLONG TotalSectors;          // 0x28: Total number of sectors on the volume
+
+    LONGLONG MFTClusterNumber;      // 0x30: Starting cluster of MFT
+    LONGLONG MFTMirrorClusterNumber;// 0x38: Starting cluster of MFT mirror
+
+    CHAR ClustersPerFileRecordSegment; // 0x40: Can be negative (2^abs(n))
+    BYTE Reserved1[3];                  // 0x41
+
+    CHAR ClustersPerIndexBlock;     // 0x44
+    BYTE Reserved2[3];              // 0x45
+
+    LONGLONG VolumeSerialNumber;   // 0x48
+    DWORD Checksum;                // 0x50
+
+    BYTE BootCode[426];            // 0x54: Bootstrap code (fills rest of sector)
+    WORD EndOfSectorMarker;        // 0x1FE: Always 0xAA55
+} NTFS_BOOT_SECTOR, * PNTFS_BOOT_SECTOR;
+
+
+
+
+typedef struct _ATTRIBUTE_HEADER {
+    DWORD Type;
+    DWORD Length;
+    BYTE NonResident;
+    BYTE NameLength;
+    WORD NameOffset;
+    WORD Flags;
+    WORD Instance;
+    struct Resident {
+        DWORD ValueLength;
+        WORD ValueOffset;
+        BYTE ResidentFlags;
+        BYTE Reserved;
+    };
+
+    struct NonResident {
+        ULONGLONG StartingVCN;
+        ULONGLONG LastVCN;
+        WORD RunListOffset;
+        WORD CompressionUnit;
+        DWORD Padding;
+        ULONGLONG AllocatedSize;
+        ULONGLONG DataSize;
+        ULONGLONG InitializedSize;
+        // Optional: ULONGLONG CompressedSize; // Only if compressed and sparse
+    };
+} ATTRIBUTE_HEADER, * PATTRIBUTE_HEADER;
+
+typedef struct _FILE_RECORD_HEADER {
+    DWORD Type;                  // 'FILE' = 0x454C4946 (ASCII for "FILE")
+    WORD UsaOffset;              // Offset to Update Sequence Array (for fixing sectors)
+    WORD UsaCount;               // Size in words of Update Sequence Array (including the USN)
+    ULONGLONG LSN;               // $LogFile Sequence Number
+    WORD SequenceNumber;         // Sequence number (used for detecting reused file records)
+    WORD LinkCount;              // Hard link count
+    WORD AttrOffset;             // Offset to first attribute
+    WORD Flags;                  // 0x01 = in use, 0x02 = directory
+    DWORD BytesInUse;            // Real size of the FILE record
+    DWORD BytesAllocated;        // Allocated size of the FILE record (usually 1024 bytes)
+    ULONGLONG BaseFileRecord;    // File reference to the base FILE record (for attribute lists)
+    WORD NextAttrID;             // Next available attribute ID
+    WORD Align;                  // Padding/alignment
+    DWORD MFTRecordNumber;       // Index of this record in the $MFT
+} FILE_RECORD_HEADER, * PFILE_RECORD_HEADER;
 
 
 typedef struct _SIMPLE_IDTENTRY64 {
@@ -218,6 +302,12 @@ extern "C" NTSTATUS ObReferenceObjectByName(
     _Inout_opt_ PVOID ParseContext,
     _Out_ PVOID* Object
 );
+
+
+
+
+
+
 
 //0xa0 bytes (sizeof)
 typedef struct _KLDR_DATA_TABLE_ENTRY
@@ -816,6 +906,7 @@ typedef struct _MY_KPROCESS {
     UCHAR Reserved[0x28];
     ULONG DirectoryTableBase; // CR3 or Directory Table Base
 } MY_KPROCESS, * PMY_KPROCESS;
+
 
 
 

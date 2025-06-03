@@ -13,10 +13,10 @@ bool AV::extract_process_name( PEPROCESS process ) {
     PsGetProcessImageFileName_t fn_image_fl_name = reinterpret_cast< PsGetProcessImageFileName_t >( globals::stored_three );
     if ( !fn_image_fl_name ) return false;
 
-    UCHAR* image_name = fn_image_fl_name( process );
+    auto* image_name = fn_image_fl_name( process );
     if ( !image_name ) return false;
 
-    size_t len = helpers::ansi_to_wide( reinterpret_cast< const char* >( image_name ), wide_buffer, RTL_NUMBER_OF( wide_buffer ) );
+    auto len = helpers::ansi_to_wide( reinterpret_cast< const char* >( image_name ), wide_buffer, RTL_NUMBER_OF( wide_buffer ) );
 
     auto* filename_start = modules::FindFilenameStart( wide_buffer, len );
     if ( !filename_start ) return false;
@@ -40,7 +40,7 @@ bool AV::extract_thread_name( PETHREAD thread ) {
     // I really want to avoid win_api calls but since these are usermode orientated objects, we gotta do this gay shit, 
     // it gets the point accross (source: virus total) --> alt_syscalls soon
     IoThreadToProcess_t fn_io_thread = reinterpret_cast< IoThreadToProcess_t >( globals::stored_four );
-    PEPROCESS owning_process = fn_io_thread( thread );
+    auto owning_process = fn_io_thread( thread );
 
     if ( !owning_process ) return false;
 
@@ -50,7 +50,7 @@ bool AV::extract_thread_name( PETHREAD thread ) {
     UCHAR* image_name = fn_image_fl_name( owning_process );
     if ( !image_name ) return false;
 
-    size_t len = helpers::ansi_to_wide( reinterpret_cast< const char* >( image_name ), wide_buffer, RTL_NUMBER_OF( wide_buffer ) );
+    auto len = helpers::ansi_to_wide( reinterpret_cast< const char* >( image_name ), wide_buffer, RTL_NUMBER_OF( wide_buffer ) );
 
     auto* filename_start = modules::FindFilenameStart( wide_buffer, len );
     if ( !filename_start ) return false;
@@ -128,7 +128,8 @@ bool AV::protect_file( FILE_OBJECT* file_object ) {
     if ( !filename_start ) return false;
 
     UINT64 extension_hash = hash::salted_hash_string_ci( filename_start, helpers::wcslen( filename_start ) );
-
+    DbgPrint( "[PROTECT] Filename: %ws", filename_start );
+    DbgPrint( "[PROTECT] extension_hash: %llx", extension_hash );
     for ( auto hash : globals::Hashed_Names ) {
 
         if ( extension_hash == hash ) {

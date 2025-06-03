@@ -112,9 +112,9 @@ PDRIVER_OBJECT modules::AllocateFakeDriverObject( PDRIVER_OBJECT targetDriver, P
     return fakeDriver;
 }
 
-void* modules::get_driver_object( const wchar_t* driver_name, PDRIVER_OBJECT& obj, pointer_table& funcs )
+void* modules::get_driver_object( const wchar_t* driver_name, PDRIVER_OBJECT& obj, pointer_table table_handle )
 {
-    auto driver_type = reinterpret_cast< POBJECT_TYPE * >(funcs.GetIoDriverObjectType);
+    auto driver_type = reinterpret_cast< POBJECT_TYPE * >( table_handle.GetIoDriverObjectType);
 
     UNICODE_STRING driverName;
     RtlInitUnicodeString( &driverName, driver_name );
@@ -129,6 +129,26 @@ void* modules::get_driver_object( const wchar_t* driver_name, PDRIVER_OBJECT& ob
     return obj;
 }
 
+
+void* modules::get_NTFS_driver_object( const wchar_t* driver_name, PDRIVER_OBJECT& obj, pointer_table table_handle )
+{
+    auto driver_type = reinterpret_cast< POBJECT_TYPE* >( table_handle.GetIoDriverObjectType );
+
+    UNICODE_STRING driverName;
+    RtlInitUnicodeString( &driverName, driver_name );
+
+    auto status = ObReferenceObjectByName( &driverName, OBJ_CASE_INSENSITIVE, nullptr, 0, *driver_type, KernelMode, nullptr, reinterpret_cast< PVOID* >( &obj ) );
+
+    if ( !NT_SUCCESS( status ) )
+        return 0;
+
+    Logger::Print( Logger::Level::Info, "Partmgr Driver DRIVER_OBJECT, Exposed For Copying" );
+
+    if ( obj )
+        DbgPrint( "Device: 0x%llx", obj->DeviceObject->DeviceType );
+
+    return obj;
+}
 
 void modules::DeallocateFakeDriverObject( PDRIVER_OBJECT fakeDriver, func_pointer_table table_handle )
 {

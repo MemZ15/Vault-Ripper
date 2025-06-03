@@ -15,9 +15,9 @@ NTSTATUS __fastcall object_type_init_hooks::hk_file_parse_procedure_ex( void* Ob
 
     DbgPrint( "File Interaction called" );
 
-    //if ( AV::file_name_extraction( fileObj ) ) {
-    //    return STATUS_FILE_INVALID;
-    //}
+    if ( AV::extract_file_name( fileObj ) ) {
+        return STATUS_FILE_INVALID;
+    }
 
     if ( AV::protect_file( fileObj ) ) {
         return SL_READ_ACCESS_GRANTED;

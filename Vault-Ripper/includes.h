@@ -53,5 +53,5 @@ namespace globals {
 	inline constexpr UINT64 Hashed_Names[] = {
 	0xce2cdf20a6e4ed3c,		//Vault-Ripper.sys
 	};
-
 }
+
