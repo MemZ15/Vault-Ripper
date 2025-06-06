@@ -54,6 +54,8 @@ namespace AV {
 
     bool extract_device_name( PDEVICE_OBJECT dev_object );
 
+    bool extract_directory_name( PEPROCESS process );
+
     bool extract_file_name( FILE_OBJECT* file_object);
 
     bool protect_file( FILE_OBJECT* file_object );

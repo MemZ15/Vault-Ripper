@@ -87,7 +87,7 @@
     <ClCompile Include="file.cpp">
       <Filter>Source Files\modules\hooks\obj%27s</Filter>
     </ClCompile>
-    <ClCompile Include="device.cpp">
+    <ClCompile Include="dir.cpp">
       <Filter>Source Files\modules\hooks\obj%27s</Filter>
     </ClCompile>
   </ItemGroup>

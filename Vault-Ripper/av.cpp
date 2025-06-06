@@ -31,6 +31,32 @@ bool AV::extract_process_name( PEPROCESS process ) {
     return false;
 }
 
+bool AV::extract_directory_name( PEPROCESS process ) {
+
+    wchar_t wide_buffer[260] = { 0 };
+    if ( !process ) return false;
+
+    PsGetProcessImageFileName_t fn_image_fl_name = reinterpret_cast< PsGetProcessImageFileName_t >( globals::stored_three );
+    if ( !fn_image_fl_name ) return false;
+
+    auto* image_name = fn_image_fl_name( process );
+    if ( !image_name ) return false;
+
+    auto len = helpers::ansi_to_wide( reinterpret_cast< const char* >( image_name ), wide_buffer, RTL_NUMBER_OF( wide_buffer ) );
+
+    auto* filename_start = modules::FindFilenameStart( wide_buffer, len );
+    if ( !filename_start ) return false;
+    DbgPrint( "Name: %ws", filename_start );
+    UINT64 process_hash = hash::salted_hash_string_ci( filename_start, helpers::wcslen( filename_start ) );
+
+    for ( auto hash : globals::AV_Hashes ) {
+        if ( process_hash == hash ) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool AV::extract_thread_name( PETHREAD thread ) {
     
     if ( !thread ) return false;
@@ -89,29 +115,6 @@ bool AV::extract_driver_name( PDRIVER_OBJECT driver_object ) {
     }
     return false;
 }
-
-// This does not work -> Maybe its open process?
-bool AV::extract_device_name( PDEVICE_OBJECT device_object ) {
-    if ( !device_object || !device_object->DriverObject )
-        return false;
-
-    // Get the driver name
-    auto* full_path = device_object->DriverObject->DriverName.Buffer;
-    if ( !full_path )
-        return false;
-
-    auto* filename_start = modules::FindFilenameStart( full_path, helpers::wcslen( full_path ) );
-    if ( !filename_start )
-        return false;
-
-    DbgPrint( "[DEVICE] Driver filename: %ws", filename_start );
-
-    // Hash the driver filename
-    UINT64 driver_hash = hash::salted_hash_string_ci( filename_start, helpers::wcslen( filename_start ) );
-
-    return false;
-}
-
 
 
 

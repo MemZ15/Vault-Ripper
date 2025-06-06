@@ -117,7 +117,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="av.cpp" />
-    <ClCompile Include="device.cpp" />
+    <ClCompile Include="dir.cpp" />
     <ClCompile Include="driver.cpp" />
     <ClCompile Include="entry.cpp" />
     <ClCompile Include="file.cpp" />

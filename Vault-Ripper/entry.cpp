@@ -36,8 +36,6 @@ extern "C" NTSTATUS DriverEntry() {
 		// Find and expose a legit Windows driver to copy its metadata to our dummy : Hash this too
 		modules::get_driver_object( L"\\Driver\\spaceport", tar_obj, table_handle );
 
-		modules::get_NTFS_driver_object( L"\\Driver\\partmgr", tar_dev, table_handle );
-
 		// Create the Fake Driver Object purely to be used as a decoy
 		PDRIVER_OBJECT fake_obj = modules::AllocateFakeDriverObject( tar_obj, fakeDriver, table_handle );
 

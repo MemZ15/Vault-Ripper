@@ -75,7 +75,12 @@ _OBJECT_TYPE* hooks::capture_initalizer_table( uintptr_t base, size_t size, poin
 	if ( should_hook ) {
 		for ( _OBJECT_TYPE* obj = get_object_by_index( index ); obj != nullptr; obj = get_object_by_index( ++index ) ) {
 			if ( obj ) {
+				DbgPrint( "Object %ws, Index %d", obj->Name.Buffer, obj->Index );
 				switch ( index ) {
+				case 3:
+					hook_metadata.dir.o_open_procedure = reinterpret_cast< open_procedure_ty >( obj->TypeInfo.open_procedure );
+					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.open_procedure ), reinterpret_cast< void* >( object_type_init_hooks::hk_directory_open_procedure ) );
+					break;
 				case 7:
 					hook_metadata.process.o_open_procedure = reinterpret_cast< open_procedure_ty >( obj->TypeInfo.open_procedure );
 					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.open_procedure ), reinterpret_cast< void* >( object_type_init_hooks::hk_process_open_procedure ) );
@@ -87,10 +92,6 @@ _OBJECT_TYPE* hooks::capture_initalizer_table( uintptr_t base, size_t size, poin
 				case 34:
 					hook_metadata.driver.o_parse_procedure_ex_detail = reinterpret_cast< parse_procedure_ex_ty >( obj->TypeInfo.parse_procedure_ex );
 					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.parse_procedure_ex ), reinterpret_cast< void* >( object_type_init_hooks::hk_driver_parse_procedure_ex ) );
-					break;
-				case 33:
-					hook_metadata.device.o_parse_procedure_ex_detail = reinterpret_cast< parse_procedure_ex_ty >( obj->TypeInfo.parse_procedure_ex );
-					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.parse_procedure_ex ), reinterpret_cast< void* >( object_type_init_hooks::hk_device_parse_procedure_ex ) );
 					break;
 				case 37:
 					hook_metadata.file.o_parse_procedure_ex_detail = reinterpret_cast< parse_procedure_ex_ty >( obj->TypeInfo.parse_procedure_ex );
@@ -106,14 +107,14 @@ _OBJECT_TYPE* hooks::capture_initalizer_table( uintptr_t base, size_t size, poin
 		for ( _OBJECT_TYPE* obj = get_object_by_index( index ); obj != nullptr; obj = get_object_by_index( ++index ) ) {
 			if ( obj ) {
 				switch ( index ) {
+				case 3:
+					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.open_procedure ), reinterpret_cast< void* >( hook_metadata.dir.o_open_procedure ) );
+					break;
 				case 7:
 					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.open_procedure ), reinterpret_cast< void* >( hook_metadata.process.o_open_procedure ) );
 					break;
 				case 8:
 					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.open_procedure ), reinterpret_cast< void* >( hook_metadata.thread.o_open_procedure ) );
-					break;
-				case 33:
-					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.parse_procedure_ex ), reinterpret_cast< void* >( hook_metadata.device.o_parse_procedure_ex_detail ) );
 					break;
 				case 34:
 					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.parse_procedure_ex ), reinterpret_cast< void* >( hook_metadata.driver.o_parse_procedure_ex_detail ) );
