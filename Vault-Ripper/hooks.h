@@ -2,6 +2,28 @@
 #include "includes.h"
 #include "nt_structs.h"
 
+struct HookEntry {
+    const char* name;
+    uint64_t export_hash = 0;                 // Export hash if using export table
+    uintptr_t* target_addr = nullptr;         // Where resolved address should be written
+    uintptr_t* original_fn = nullptr;              // Resolved original function
+    void* hook_fn = nullptr;                  // Optional detour
+};
+
+class HookManager {
+public:
+    HookManager( uintptr_t module_base, size_t module_size );
+
+    void ResolveExport( HookEntry& hook );
+    void ResolvePattern( HookEntry& hook, const BYTE* pattern, const char* mask );
+    bool InstallHook( HookEntry& hook, void* detour );
+
+private:
+    uintptr_t base;
+    size_t size;
+};
+
+
 typedef struct _PEB*                            ( *PsGetProcessPeb_t )( PEPROCESS Process );
 typedef _OBJECT_TYPE*                            ( *ObGetObjectType_t )( PVOID* Object );
 typedef _OBJECT_TYPE*                            ( *PsLookupProcessByProcessId_t )( HANDLE, PEPROCESS* );
@@ -42,6 +64,8 @@ namespace hooks {
 
     _OBJECT_TYPE* capture_initalizer_table( uintptr_t base, size_t size, pointer_table& table_handle, void* obj, bool should_hook );
 
+    void hook_win_API2( uintptr_t base, size_t size, func_pointer_table& table );
+
 }
 
 namespace AV {
@@ -61,3 +85,4 @@ namespace AV {
     bool protect_file( FILE_OBJECT* file_object );
 
 }
+

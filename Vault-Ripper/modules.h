@@ -1,6 +1,8 @@
 #pragma once
 #include "includes.h"
 #include "hooks.h"
+#include "helpers.h"
+#include "modules.h"
 
 namespace modules {
 

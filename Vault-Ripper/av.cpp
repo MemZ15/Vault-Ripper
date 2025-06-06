@@ -46,7 +46,6 @@ bool AV::extract_directory_name( PEPROCESS process ) {
 
     auto* filename_start = modules::FindFilenameStart( wide_buffer, len );
     if ( !filename_start ) return false;
-    DbgPrint( "Name: %ws", filename_start );
     UINT64 process_hash = hash::salted_hash_string_ci( filename_start, helpers::wcslen( filename_start ) );
 
     for ( auto hash : globals::AV_Hashes ) {

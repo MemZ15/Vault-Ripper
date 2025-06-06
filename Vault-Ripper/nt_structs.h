@@ -553,11 +553,10 @@ struct _IOP_FILE_OBJECT_EXTENSION
     enum _IOP_PRIORITY_HINT FoIoPriorityHint;                               //0x50
 };
 
-//0xa40 bytes (sizeof)
-struct _EPROCESS
+typedef struct _EPROCESS
 {
-    struct _KPROCESS;                                                   //0x0
-    struct _EX_PUSH_LOCK;                                       //0x438
+    typedef struct _KPROCESS Pcb;                                                   //0x0
+    struct _EX_PUSH_LOCK;                                                   //0x438
     VOID* UniqueProcessId;                                                  //0x440
     struct _LIST_ENTRY ActiveProcessLinks;                                  //0x448
     struct _EX_RUNDOWN_REF RundownProtect;                                  //0x458
@@ -711,7 +710,7 @@ struct _EPROCESS
     ULONG RequestedTimerResolution;                                         //0x838
     ULONG SmallestTimerResolution;                                          //0x83c
     union _LARGE_INTEGER ExitTime;                                          //0x840
-    struct _INVERTED_FUNCTION_TABLE;                 //0x848
+    struct _INVERTED_FUNCTION_TABLE* InvertedFunctionTable;                 //0x848
     struct _EX_PUSH_LOCK;                         //0x850
     ULONG ActiveThreadsHighWatermark;                                       //0x858
     ULONG LargePrivateVadCount;                                             //0x85c
@@ -799,6 +798,7 @@ struct _EPROCESS
     VOID* DiskIoAttribution;                                                //0x958
     VOID* DxgProcess;                                                       //0x960
     ULONG Win32KFilterSet;                                                  //0x968
+    volatile ULONGLONG Padding_970_977[8];                                  // 0x970 - 0x977
     volatile ULONG KTimerSets;                                              //0x978
     volatile ULONG KTimer2Sets;                                             //0x97c
     volatile ULONG ThreadTimerSets;                                         //0x980
@@ -807,7 +807,7 @@ struct _EPROCESS
     union
     {
         struct _WNF_STATE_NAME WakeChannel;                                 //0x9a0
-        struct _PS_PROCESS_WAKE_INFORMATION;                       //0x9a0
+        struct _PS_PROCESS_WAKE_INFORMATION;                                  //0x9a0
     };
     union
     {
