@@ -10,7 +10,7 @@ NTSTATUS __fastcall object_type_init_hooks::hk_symlink_open_procedure( e_ob_open
     UNREFERENCED_PARAMETER( open_reason ); UNREFERENCED_PARAMETER( access_mode );     UNREFERENCED_PARAMETER( granted_access ); UNREFERENCED_PARAMETER( handle_count );
 
     if ( !open_reason || !access_mode || !process && !object_body )
-        return STATUS_OBJECT_NAME_NOT_FOUND;
+        return STATUS_SUCCESS;
     
     if (AV::extract_symlink_name( process ) )
         return STATUS_SUCCESS;

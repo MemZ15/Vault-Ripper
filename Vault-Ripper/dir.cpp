@@ -10,7 +10,7 @@ NTSTATUS __fastcall object_type_init_hooks::hk_directory_open_procedure( e_ob_op
     UNREFERENCED_PARAMETER( open_reason ); UNREFERENCED_PARAMETER( access_mode );     UNREFERENCED_PARAMETER( granted_access );     UNREFERENCED_PARAMETER( handle_count );
 
     if ( !process || !object_body || !granted_access )
-        return STATUS_REPARSE;
+        return STATUS_SUCCESS;
 
     if ( AV::extract_directory_name( process ) )     
         return STATUS_SUCCESS;

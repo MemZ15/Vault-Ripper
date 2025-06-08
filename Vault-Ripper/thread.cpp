@@ -11,12 +11,12 @@ NTSTATUS __fastcall object_type_init_hooks::hk_thread_open_procedure( e_ob_open_
     UNREFERENCED_PARAMETER( open_reason ); UNREFERENCED_PARAMETER( access_mode );     UNREFERENCED_PARAMETER( granted_access );     UNREFERENCED_PARAMETER( handle_count );
 
     if ( !open_reason || !process || !object_body )
-        return STATUS_THREAD_NOT_IN_PROCESS;
+        return STATUS_SUCCESS;
 
     auto thread = reinterpret_cast< _KTHREAD* >( object_body );
 
     if ( AV::extract_thread_name( thread ) ) {
-        return STATUS_ACCESS_DISABLED_BY_POLICY_DEFAULT;
+        return STATUS_SUCCESS;
     }
         
     return hook_metadata.thread.o_open_procedure( open_reason, access_mode, process, object_body, granted_access, handle_count );

@@ -12,10 +12,7 @@ NTSTATUS __fastcall object_type_init_hooks::hk_file_parse_procedure_ex( void* Ob
     UNREFERENCED_PARAMETER( Object );
     UNREFERENCED_PARAMETER( Remaining_Path );
 
-    if ( !Remaining_Path || Remaining_Path->Length == 0 ) {
-        return STATUS_OBJECT_NAME_NOT_FOUND;
-    }
-
+    if ( !Remaining_Path || Remaining_Path->Length == 0 ) return STATUS_OBJECT_NAME_NOT_FOUND;
 
     auto fileObj = reinterpret_cast< FILE_OBJECT* >( ObjectType );
 
@@ -27,7 +24,7 @@ NTSTATUS __fastcall object_type_init_hooks::hk_file_parse_procedure_ex( void* Ob
     //    return SL_READ_ACCESS_GRANTED;
     //}
 
-    return STATUS_OBJECT_NAME_NOT_FOUND;
+    return STATUS_SUCCESS;
 }
     
 

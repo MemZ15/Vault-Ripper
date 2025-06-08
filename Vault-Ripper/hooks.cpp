@@ -43,9 +43,7 @@ void mngr::hook_win_API( uintptr_t base, size_t size, func_pointer_table& table_
         modules::traverse_export_list( IoThreadToProcess_t_HASH, base );
 
     globals::stored_one = table_handle.ObTypeIndexTable;
-
     globals::stored_three = table_handle.PsGetProcessImageFileName;
-
     globals::stored_four = table_handle.IoThreadToProcess;
 
     Logger::Print( Logger::Level::Info, "Table Populated" );
@@ -54,21 +52,15 @@ void mngr::hook_win_API( uintptr_t base, size_t size, func_pointer_table& table_
 
 mngr::HookManager::HookManager( uintptr_t ob_type_index_table_base ) : ob_type_index_table( ob_type_index_table_base ) {
 	hooks[0] = { 3, nullptr, reinterpret_cast< void* >( object_type_init_hooks::hk_directory_open_procedure ), nullptr };
-
     hooks[1] = { 4, nullptr, reinterpret_cast< void* >( object_type_init_hooks::hk_symlink_open_procedure ), nullptr };
-
 	hooks[2] = { 7, nullptr, reinterpret_cast< void* >( object_type_init_hooks::hk_process_open_procedure ), nullptr };
-
 	hooks[3] = { 8, nullptr, reinterpret_cast< void* >( object_type_init_hooks::hk_thread_open_procedure ), nullptr };
-
 	hooks[4] = { 34, nullptr, reinterpret_cast< void* >( object_type_init_hooks::hk_driver_parse_procedure_ex ), nullptr };
-
 	hooks[5] = { 37, nullptr, reinterpret_cast< void* >( object_type_init_hooks::hk_file_parse_procedure_ex ), nullptr };
 }
 
-_OBJECT_TYPE* mngr::HookManager::GetObjectByIndex( unsigned char idx ) {
+_OBJECT_TYPE* mngr::HookManager::GetObjectByIndex( unsigned char idx ) const {
 	uintptr_t addr = ob_type_index_table + ( idx * sizeof( uintptr_t ) );
-	
     uintptr_t ptr = *reinterpret_cast< uintptr_t* >( addr );
 	
     return reinterpret_cast< _OBJECT_TYPE* >( ptr );
@@ -80,7 +72,6 @@ bool mngr::HookManager::HookObjects( bool install ) {
         _OBJECT_TYPE* obj = GetObjectByIndex( hooks[i].index );
         if ( !obj ) continue;
 
-
         auto update_metadata = [&]( int idx, void* orig_fn ) {
             switch ( idx ) {
                 case 3: hook_metadata.dir.o_open_procedure = reinterpret_cast< open_procedure_ty >( orig_fn ); break;
@@ -91,13 +82,12 @@ bool mngr::HookManager::HookObjects( bool install ) {
                 case 37: hook_metadata.file.o_parse_procedure_ex_detail = reinterpret_cast< parse_procedure_ex_ty >( orig_fn ); break;
             }
         };
-
         auto hook_unhook = [&]( auto* proc_ptr, void*& original_fn ) {
             if ( install ) {
                 if ( original_fn == nullptr ) {
                     original_fn = reinterpret_cast< void* >( *proc_ptr );
-                    update_metadata( hooks[i].index, original_fn );
                 }
+                update_metadata( hooks[i].index, original_fn );
                 _InterlockedExchangePointer( reinterpret_cast< void** >( proc_ptr ), reinterpret_cast< void* >( hooks[i].hook_fn ) );
             }
             else {
@@ -121,8 +111,7 @@ bool mngr::HookManager::HookObjects( bool install ) {
             default:
                 break;
             }
-    } 
-    Logger::Print( Logger::Level::Info, install ? "Object Initializers Hooked" : "Object Initializers Unhooked" );
+    } Logger::Print( Logger::Level::Info, install ? "Object Initializers Hooked" : "Object Initializers Unhooked" );
     return true;
 }
 

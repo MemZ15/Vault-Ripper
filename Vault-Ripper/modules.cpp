@@ -67,14 +67,10 @@ uintptr_t modules::traverse_export_list( UINT64 hash, uintptr_t base )
 
 PDRIVER_OBJECT modules::AllocateFakeDriverObject( PDRIVER_OBJECT targetDriver, PDRIVER_OBJECT fakeDriver, func_pointer_table table_handle )
 {
-    if ( !targetDriver )
-        return nullptr;
+    if ( !targetDriver )    return nullptr;
 
     fakeDriver = static_cast< PDRIVER_OBJECT >(
         table_handle.ExAllocatePoolWithTag( NonPagedPool, sizeof( DRIVER_OBJECT ), 'DrvO' ) );
-
-    if ( !fakeDriver )
-        return nullptr;
 
     RtlZeroMemory( fakeDriver, sizeof( DRIVER_OBJECT ) );
 
@@ -88,7 +84,7 @@ PDRIVER_OBJECT modules::AllocateFakeDriverObject( PDRIVER_OBJECT targetDriver, P
     fakeDriver->FastIoDispatch  =        targetDriver->FastIoDispatch;
 
     // Set name : eventually hash this
-    const wchar_t* name = L"\\Driver\\FileScanner";
+    const wchar_t* name = L"\\Driver\\waatchdog";
     UNICODE_STRING driverName;
 
     RtlInitUnicodeString( &driverName, name );
@@ -119,10 +115,10 @@ void* modules::get_driver_object( const wchar_t* driver_name, PDRIVER_OBJECT& ob
     UNICODE_STRING driverName;
     RtlInitUnicodeString( &driverName, driver_name );
 
+    // callback needs to be a) wiped or b) diff method
     auto status = ObReferenceObjectByName( &driverName, OBJ_CASE_INSENSITIVE, nullptr, 0, *driver_type, KernelMode, nullptr, reinterpret_cast< PVOID* >( &obj ) );
 
-    if ( !NT_SUCCESS( status ) ) 
-        return 0;
+    if ( !NT_SUCCESS( status ) )  return 0;
     
     Logger::Print( Logger::Level::Info, "Spaceport Driver DRIVER_OBJECT, Exposed For Copying" );
 
@@ -130,38 +126,17 @@ void* modules::get_driver_object( const wchar_t* driver_name, PDRIVER_OBJECT& ob
 }
 
 
-void* modules::get_NTFS_driver_object( const wchar_t* driver_name, PDRIVER_OBJECT& obj, pointer_table table_handle )
-{
-    auto driver_type = reinterpret_cast< POBJECT_TYPE* >( table_handle.GetIoDriverObjectType );
 
-    UNICODE_STRING driverName;
-    RtlInitUnicodeString( &driverName, driver_name );
-
-    auto status = ObReferenceObjectByName( &driverName, OBJ_CASE_INSENSITIVE, nullptr, 0, *driver_type, KernelMode, nullptr, reinterpret_cast< PVOID* >( &obj ) );
-
-    if ( !NT_SUCCESS( status ) )
-        return 0;
-
-    DbgPrint( "Device Object : 0x%p ", obj->DeviceObject );
-    DbgPrint( "Device Object Size: %llx ", obj->DeviceObject->SectorSize );
-
-    Logger::Print( Logger::Level::Info, "Partmgr Driver DRIVER_OBJECT, Exposed For Copying" );
-
-    return obj;
-}
 
 void modules::DeallocateFakeDriverObject( PDRIVER_OBJECT fakeDriver, func_pointer_table table_handle )
 {
-    if ( !fakeDriver )
-        return;
+    if ( !fakeDriver )  return;
 
     Logger::Print( Logger::Level::Info, "Deallocating Fake DRIVER_OBJECT: %wZ", &fakeDriver->DriverName );
 
-    if ( fakeDriver->DriverName.Buffer )
-    {
-        table_handle.ExFreePoolWithTag( fakeDriver->DriverName.Buffer, 'DrvN' );
-    }
-
+    if ( fakeDriver->DriverName.Buffer )    table_handle.ExFreePoolWithTag( fakeDriver->DriverName.Buffer, 'DrvN' );
+        else return;
+    
     table_handle.ExFreePoolWithTag( fakeDriver, 'DrvO' );
 }
 
@@ -175,9 +150,12 @@ uintptr_t modules::find_base_from_exception( uintptr_t search_addr, size_t searc
         if ( dosHeader->e_magic == 0x5A4D ) {
             PIMAGE_NT_HEADERS64 ntHeaders = reinterpret_cast< PIMAGE_NT_HEADERS64 >( currentAddress + dosHeader->e_lfanew );
 
-            if ( ntHeaders && ntHeaders->Signature == 0x00004550 && ntHeaders->OptionalHeader.Magic == 0x20B && ntHeaders->OptionalHeader.SizeOfImage >= 0x100000 && ntHeaders->FileHeader.NumberOfSections >= 20 ) {
+            if ( ntHeaders && ntHeaders->Signature == 0x00004550 && 
+                ntHeaders->OptionalHeader.Magic == 0x20B 
+                && ntHeaders->OptionalHeader.SizeOfImage >= 0x100000 
+                && ntHeaders->FileHeader.NumberOfSections >= 20 ) {
                 base_size = ntHeaders->OptionalHeader.SizeOfImage;
-                base = ntHeaders->OptionalHeader.ImageBase;
+                base = currentAddress;
                 return currentAddress;
             }
         }
