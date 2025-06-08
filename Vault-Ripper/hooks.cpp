@@ -8,59 +8,129 @@
 
 ob_type_hook_pair hook_metadata = { 0 };
 
-// These need tto be cleaned
-uintptr_t globals::stored_one{ 0 };
-_OBJECT_TYPE* globals::stored_two{ nullptr };
-void* globals::stored_three{ nullptr };
-void* globals::stored_four{ nullptr };
+void mngr::hook_win_API( uintptr_t base, size_t size, func_pointer_table& table_handle ) {
+    table_handle.ObGetObjectType = ( ObGetObjectType_t )
+        modules::traverse_export_list( OBGetObjectType_HASH, base );
 
-// Am i using all hooks? global table?
-void hooks::hook_win_API( uintptr_t base, size_t size, func_pointer_table &table_handle ) {
+    table_handle.ExAllocatePoolWithTag = ( ExAllocatePoolWithTag_t )
+        modules::traverse_export_list( ExAllocatePoolWithTag_HASH, base );
 
-	table_handle.ObGetObjectType = ( ObGetObjectType_t )
-		modules::traverse_export_list( OBGetObjectType_HASH, base );
+    table_handle.ExFreePoolWithTag = ( ExFreePoolWithTag_t )
+        modules::traverse_export_list( ExFreePoolWithTag_HASH, base );
 
-	table_handle.ExAllocatePoolWithTag = ( ExAllocatePoolWithTag_t ) 
-		modules::traverse_export_list( ExAllocatePoolWithTag_HASH, base );
+    table_handle.PsLookupProcessByProcessID = ( PsLookupProcessByProcessId_t )
+        modules::traverse_export_list( PsLookupProcessByProcessId_HASH, base );
 
-	table_handle.ExFreePoolWithTag = ( ExFreePoolWithTag_t ) 
-		modules::traverse_export_list( ExFreePoolWithTag_HASH, base );
+    table_handle.PsGetProcessImageFileName = ( PsGetProcessImageFileName_t )
+        modules::traverse_export_list( PsGetProcessImageFileName_HASH, base );
 
-	table_handle.PsLookupProcessByProcessID = ( PsLookupProcessByProcessId_t ) 
-		modules::traverse_export_list( PsLookupProcessByProcessId_HASH, base );
+    table_handle.GetIoDriverObjectType = ( GetIoDriverObjectType_t )
+        modules::traverse_export_list( GetIoDriverObjectType_t_HASH, base );
 
-	table_handle.PsGetProcessImageFileName = ( PsGetProcessImageFileName_t ) 
-		modules::traverse_export_list( PsGetProcessImageFileName_HASH, base );
+    table_handle.PsGetNextProcess = ( PsGetNextProcess_t )
+        helpers::pattern_scan( base, size, patterns::PsGetNextProcessPattern, patterns::PsGetNextProcessMask );
 
-	table_handle.GetIoDriverObjectType = ( GetIoDriverObjectType_t ) 
-		modules::traverse_export_list( GetIoDriverObjectType_t_HASH, base );
+    table_handle.ObTypeIndexTableInstr = ( ObTypeIndexTable_t )
+        helpers::pattern_scan( ( uintptr_t )table_handle.ObGetObjectType, 0x100, patterns::ObTypeIndexTablePattern, patterns::ObTypeIndexTableMask );
 
-	table_handle.PsGetNextProcess = ( PsGetNextProcess_t )
-		helpers::pattern_scan( base, size, patterns::PsGetNextProcessPattern, patterns::PsGetNextProcessMask );
+    table_handle.ObTypeIndexTable = helpers::resolve_relative_address
+    ( ( uintptr_t )table_handle.ObTypeIndexTableInstr, 3, 7 );
 
-	table_handle.ObTypeIndexTableInstr = ( ObTypeIndexTable_t )
-		helpers::pattern_scan( ( uintptr_t )table_handle.ObGetObjectType, 0x100, patterns::ObTypeIndexTablePattern, patterns::ObTypeIndexTableMask );
+    table_handle.PsGetProcessPeb = ( PsGetProcessPeb_t )
+        modules::traverse_export_list( PsGetProcessPeb_t_HASH, base );
 
-	table_handle.ObTypeIndexTable = helpers::resolve_relative_address
-		( ( uintptr_t )table_handle.ObTypeIndexTableInstr, 3, 7 );
+    table_handle.IoThreadToProcess = ( IoThreadToProcess_t )
+        modules::traverse_export_list( IoThreadToProcess_t_HASH, base );
 
-	table_handle.PsGetProcessPeb = ( PsGetProcessPeb_t )
-		modules::traverse_export_list( PsGetProcessPeb_t_HASH, base );
+    globals::stored_one = table_handle.ObTypeIndexTable;
 
-	table_handle.IoThreadToProcess = ( IoThreadToProcess_t )
-		modules::traverse_export_list( IoThreadToProcess_t_HASH, base );
+    globals::stored_three = table_handle.PsGetProcessImageFileName;
 
-	globals::stored_one = table_handle.ObTypeIndexTable;
-	
-	globals::stored_three = table_handle.PsGetProcessImageFileName;
+    globals::stored_four = table_handle.IoThreadToProcess;
 
-	globals::stored_four = table_handle.IoThreadToProcess;
-
-	Logger::Print( Logger::Level::Info, "Table Populated" );
+    Logger::Print( Logger::Level::Info, "Table Populated" );
 }
 
 
-_OBJECT_TYPE* hooks::capture_initalizer_table( uintptr_t base, size_t size, pointer_table& table_handle, void* obj, bool should_hook ){
+mngr::HookManager::HookManager( uintptr_t ob_type_index_table_base ) : ob_type_index_table( ob_type_index_table_base ) {
+	hooks[0] = { 3, nullptr, reinterpret_cast< void* >( object_type_init_hooks::hk_directory_open_procedure ), nullptr };
+
+    hooks[1] = { 4, nullptr, reinterpret_cast< void* >( object_type_init_hooks::hk_symlink_open_procedure ), nullptr };
+
+	hooks[2] = { 7, nullptr, reinterpret_cast< void* >( object_type_init_hooks::hk_process_open_procedure ), nullptr };
+
+	hooks[3] = { 8, nullptr, reinterpret_cast< void* >( object_type_init_hooks::hk_thread_open_procedure ), nullptr };
+
+	hooks[4] = { 34, nullptr, reinterpret_cast< void* >( object_type_init_hooks::hk_driver_parse_procedure_ex ), nullptr };
+
+	hooks[5] = { 37, nullptr, reinterpret_cast< void* >( object_type_init_hooks::hk_file_parse_procedure_ex ), nullptr };
+}
+
+_OBJECT_TYPE* mngr::HookManager::GetObjectByIndex( unsigned char idx ) {
+	uintptr_t addr = ob_type_index_table + ( idx * sizeof( uintptr_t ) );
+	
+    uintptr_t ptr = *reinterpret_cast< uintptr_t* >( addr );
+	
+    return reinterpret_cast< _OBJECT_TYPE* >( ptr );
+}
+
+bool mngr::HookManager::HookObjects( bool install ) {
+    for ( int i = 0; i < hook_count; i++ ) {
+        
+        _OBJECT_TYPE* obj = GetObjectByIndex( hooks[i].index );
+        if ( !obj ) continue;
+
+
+        auto update_metadata = [&]( int idx, void* orig_fn ) {
+            switch ( idx ) {
+                case 3: hook_metadata.dir.o_open_procedure = reinterpret_cast< open_procedure_ty >( orig_fn ); break;
+                case 4: hook_metadata.symlink.o_open_procedure = reinterpret_cast< open_procedure_ty >( orig_fn ); break;
+                case 7: hook_metadata.process.o_open_procedure = reinterpret_cast< open_procedure_ty >( orig_fn ); break;
+                case 8: hook_metadata.thread.o_open_procedure = reinterpret_cast< open_procedure_ty >( orig_fn ); break;
+                case 34: hook_metadata.driver.o_parse_procedure_ex_detail = reinterpret_cast< parse_procedure_ex_ty >( orig_fn ); break;
+                case 37: hook_metadata.file.o_parse_procedure_ex_detail = reinterpret_cast< parse_procedure_ex_ty >( orig_fn ); break;
+            }
+        };
+
+        auto hook_unhook = [&]( auto* proc_ptr, void*& original_fn ) {
+            if ( install ) {
+                if ( original_fn == nullptr ) {
+                    original_fn = reinterpret_cast< void* >( *proc_ptr );
+                    update_metadata( hooks[i].index, original_fn );
+                }
+                _InterlockedExchangePointer( reinterpret_cast< void** >( proc_ptr ), reinterpret_cast< void* >( hooks[i].hook_fn ) );
+            }
+            else {
+                _InterlockedExchangePointer( reinterpret_cast< void** >( proc_ptr ), reinterpret_cast< void* >( original_fn ) );
+            }
+        };
+
+        // Process, Thread, Symlink, Directory
+        switch ( hooks[i].index ) {
+            case 3: case 4: case 7: case 8: {
+                open_procedure_ty* open_ptr = &obj->TypeInfo.open_procedure;
+                hook_unhook( open_ptr, hooks[i].original_fn );
+                break;
+            }
+        // Driver, File
+            case 34: case 37: {
+                parse_procedure_ex_ty* parse_ptr = &obj->TypeInfo.parse_procedure_ex;
+                hook_unhook( parse_ptr, hooks[i].original_fn );
+                break;
+            }
+            default:
+                break;
+            }
+    } 
+    Logger::Print( Logger::Level::Info, install ? "Object Initializers Hooked" : "Object Initializers Unhooked" );
+    return true;
+}
+
+
+
+
+// Just used to dump obj types --> will be removed
+_OBJECT_TYPE* test::capture_initalizer_table( uintptr_t base, size_t size, pointer_table& table_handle, void* obj, bool should_hook ) {
 	auto ob_type_index_table_base = table_handle.ObTypeIndexTable;
 
 	_OBJECT_HEADER* obj_header = reinterpret_cast< _OBJECT_HEADER* >( reinterpret_cast< uint8_t* >( obj ) - sizeof( _OBJECT_HEADER ) );
@@ -73,64 +143,12 @@ _OBJECT_TYPE* hooks::capture_initalizer_table( uintptr_t base, size_t size, poin
 	};
 
 	unsigned char index = 2;
-	if ( should_hook ) {
-		for ( _OBJECT_TYPE* obj = get_object_by_index( index ); obj != nullptr; obj = get_object_by_index( ++index ) ) {
-			if ( obj ) {
-				DbgPrint( "Object %ws, Index %d", obj->Name.Buffer, obj->Index );
-				switch ( index ) {
-				case 3:
-					hook_metadata.dir.o_open_procedure = reinterpret_cast< open_procedure_ty >( obj->TypeInfo.open_procedure );
-					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.open_procedure ), reinterpret_cast< void* >( object_type_init_hooks::hk_directory_open_procedure ) );
-					break;
-				case 7:
-					hook_metadata.process.o_open_procedure = reinterpret_cast< open_procedure_ty >( obj->TypeInfo.open_procedure );
-					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.open_procedure ), reinterpret_cast< void* >( object_type_init_hooks::hk_process_open_procedure ) );
-					break;
-				case 8:
-					hook_metadata.thread.o_open_procedure = reinterpret_cast< open_procedure_ty >( obj->TypeInfo.open_procedure );
-					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.open_procedure ), reinterpret_cast< void* >( object_type_init_hooks::hk_thread_open_procedure ) );
-					break;
-				case 34:
-					hook_metadata.driver.o_parse_procedure_ex_detail = reinterpret_cast< parse_procedure_ex_ty >( obj->TypeInfo.parse_procedure_ex );
-					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.parse_procedure_ex ), reinterpret_cast< void* >( object_type_init_hooks::hk_driver_parse_procedure_ex ) );
-					break;
-				case 37:
-					hook_metadata.file.o_parse_procedure_ex_detail = reinterpret_cast< parse_procedure_ex_ty >( obj->TypeInfo.parse_procedure_ex );
-					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.parse_procedure_ex ), reinterpret_cast< void* >( object_type_init_hooks::hk_file_parse_procedure_ex ) );
-					break;
-				}
-			}
-		}
-		Logger::Print( Logger::Level::Info, "Object Initalizer's Hooked" );
-	}
-	else
-	{
-		for ( _OBJECT_TYPE* obj = get_object_by_index( index ); obj != nullptr; obj = get_object_by_index( ++index ) ) {
-			if ( obj ) {
-				switch ( index ) {
-				case 3:
-					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.open_procedure ), reinterpret_cast< void* >( hook_metadata.dir.o_open_procedure ) );
-					break;
-				case 7:
-					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.open_procedure ), reinterpret_cast< void* >( hook_metadata.process.o_open_procedure ) );
-					break;
-				case 8:
-					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.open_procedure ), reinterpret_cast< void* >( hook_metadata.thread.o_open_procedure ) );
-					break;
-				case 34:
-					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.parse_procedure_ex ), reinterpret_cast< void* >( hook_metadata.driver.o_parse_procedure_ex_detail ) );
-					break;
-				case 37:
-					_InterlockedExchangePointer( reinterpret_cast< void** >( &obj->TypeInfo.parse_procedure_ex ), reinterpret_cast< void* >( hook_metadata.file.o_parse_procedure_ex_detail ) );
-					break;
-				}
-			}
-		}
-		Logger::Print( Logger::Level::Info, "Object Initalizer's Unhooked" );
-
-		// No input code - return null
+    if ( should_hook ) {
+        for ( _OBJECT_TYPE* obj = get_object_by_index( index ); obj != nullptr; obj = get_object_by_index( ++index ) ) {
+            if ( obj ) {
+                DbgPrint( "Object %ws, Index %d", obj->Name.Buffer, obj->Index );
+            }
+        }
+    }
 		return nullptr;
-	}
 }
-
-

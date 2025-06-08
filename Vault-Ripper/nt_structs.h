@@ -449,7 +449,7 @@ struct _OBJECT_TYPE
 
 struct ob_type_hook_pair {
 
-    struct DeviceHook {
+    struct Symlink {
         dump_procedure_ty               o_dump_procedure;
         open_procedure_ty               o_open_procedure;
         close_procedure_ty              o_close_procedure;
@@ -459,7 +459,7 @@ struct ob_type_hook_pair {
         security_procedure_ty           o_security_procedure;
         query_name_procedure_ty         o_query_name_procedure;
         okay_to_close_procedure_ty      o_okay_to_close_procedure;
-    } device;
+    } symlink;
 
     struct DirHook {
         dump_procedure_ty               o_dump_procedure;
@@ -508,17 +508,6 @@ struct ob_type_hook_pair {
         okay_to_close_procedure_ty      o_okay_to_close_procedure;
     } file;
 
-    struct CallbackHook {
-        dump_procedure_ty               o_dump_procedure;
-        open_procedure_ty               o_open_procedure;
-        close_procedure_ty              o_close_procedure;
-        delete_procedure_ty             o_delete_procedure;
-        parse_procedure_ty              o_parse_procedure_detail;
-        security_procedure_ty           o_security_procedure;
-        query_name_procedure_ty         o_query_name_procedure;
-        okay_to_close_procedure_ty      o_okay_to_close_procedure;
-    } callback;
-
     struct ALPCHook {
         dump_procedure_ty               o_dump_procedure;
         open_procedure_ty               o_open_procedure;
@@ -543,7 +532,7 @@ struct ob_type_hook_pair {
     } thread;
 };
 
-extern ob_type_hook_pair hook_metadata, debug_object, process, device, file, token, callback, thread, driver, dir;
+extern ob_type_hook_pair hook_metadata, debug_object, process, device, file, token, symlink, thread, driver, dir;
 
 
 struct _IOP_FILE_OBJECT_EXTENSION

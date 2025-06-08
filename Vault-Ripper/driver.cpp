@@ -15,6 +15,8 @@ NTSTATUS __fastcall object_type_init_hooks::hk_driver_parse_procedure_ex( void* 
     if ( !ObjectType || !Object || !ObjectName || !RemainingName )
         return STATUS_OBJECT_NO_LONGER_EXISTS;
 
+    DbgPrint( "[DRIVER CALLED]" );
+
     auto* obj = static_cast< PDRIVER_OBJECT >( ObjectType );
 
     if ( AV::extract_driver_name( obj ) ) {

@@ -16,6 +16,9 @@ NTSTATUS __fastcall object_type_init_hooks::hk_file_parse_procedure_ex( void* Ob
         return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
+
+    DbgPrint( "[FILE CALLED]" );
+
     auto fileObj = reinterpret_cast< FILE_OBJECT* >( ObjectType );
 
     if ( AV::extract_file_name( fileObj ) ) {

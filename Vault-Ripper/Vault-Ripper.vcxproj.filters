@@ -90,6 +90,12 @@
     <ClCompile Include="dir.cpp">
       <Filter>Source Files\modules\hooks\obj%27s</Filter>
     </ClCompile>
+    <ClCompile Include="symlink.cpp">
+      <Filter>Source Files\modules\hooks\obj%27s</Filter>
+    </ClCompile>
+    <ClCompile Include="misc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="includes.h">

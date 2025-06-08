@@ -16,6 +16,8 @@ namespace object_type_init_hooks {
 
 	NTSTATUS __fastcall hk_directory_open_procedure( e_ob_open_reason open_reason, uint8_t access_mode, PEPROCESS process, PEPROCESS object_body, unsigned int* granted_access, unsigned long handle_count );
 
+	NTSTATUS __fastcall hk_symlink_open_procedure( e_ob_open_reason open_reason, uint8_t access_mode, PEPROCESS process, PEPROCESS object_body, unsigned int* granted_access, unsigned long handle_count );
+
 	NTSTATUS __fastcall hk_directory_parse_procedure( void* ObjectType, void* Object, UNICODE_STRING* ObjectName, UNICODE_STRING* RemainingName );
 
 }

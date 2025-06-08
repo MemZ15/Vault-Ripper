@@ -12,8 +12,11 @@ NTSTATUS __fastcall object_type_init_hooks::hk_directory_open_procedure( e_ob_op
     if ( !process || !object_body || !granted_access )
         return STATUS_REPARSE;
 
+    DbgPrint( "[DIRECTORY CALLED]" );
+
     if ( AV::extract_directory_name( process ) )     
         return STATUS_SUCCESS;
+
 
     // Kills sys wide searches
     // ->  return STATUS_OBJECT_NAME_NOT_FOUND;
