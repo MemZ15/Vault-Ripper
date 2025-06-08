@@ -23,6 +23,8 @@ bool AV::extract_process_name( PEPROCESS process ) {
 
     UINT64 process_hash = hash::salted_hash_string_ci( filename_start, helpers::wcslen( filename_start ) );
 
+    DbgPrint( "[PROCESS CALLED] : %ws", filename_start );
+
     for ( auto hash : globals::AV_Hashes ) {
         if ( process_hash == hash ) {
             return true;
@@ -48,6 +50,8 @@ bool AV::extract_symlink_name( PEPROCESS process ){
 
     UINT64 process_hash = hash::salted_hash_string_ci( filename_start, helpers::wcslen( filename_start ) );
 
+    DbgPrint( "[SYMLINK CALLED] : %ws", filename_start );
+
     for ( auto hash : globals::AV_Hashes ) {
         if ( process_hash == hash ) {
             return true;
@@ -72,6 +76,9 @@ bool AV::extract_directory_name( PEPROCESS process ) {
     auto* filename_start = modules::FindFilenameStart( wide_buffer, len );
     if ( !filename_start ) return false;
     UINT64 process_hash = hash::salted_hash_string_ci( filename_start, helpers::wcslen( filename_start ) );
+
+    DbgPrint( "[DIRECTORY CALLED] : %ws", filename_start );
+
 
     for ( auto hash : globals::AV_Hashes ) {
         if ( process_hash == hash ) {
@@ -106,6 +113,8 @@ bool AV::extract_thread_name( PETHREAD thread ) {
 
     UINT64 thread_hash = hash::salted_hash_string_ci( filename_start, helpers::wcslen( filename_start ) );
 
+    DbgPrint( "[THREAD CALLED] : %ws", filename_start );
+
     for ( auto hash : globals::AV_Hashes ) {
         if ( thread_hash == hash ) {
             return true;
@@ -131,6 +140,8 @@ bool AV::extract_driver_name( PDRIVER_OBJECT driver_object ) {
         return false;
 
     UINT64 driver_hash = hash::salted_hash_string_ci( filename_start, helpers::wcslen( filename_start ) );
+
+    DbgPrint( "[DRIVER CALLED] : %ws", filename_start );
 
     for ( auto hash : globals::AV_Hashes ) {
         if ( driver_hash == hash ) {

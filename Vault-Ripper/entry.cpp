@@ -49,11 +49,11 @@ extern "C" NTSTATUS DriverEntry() {
 		delay.QuadPart = -10LL * 1000 * 1000 * 30; // 10 seconds
 		KeDelayExecutionThread( KernelMode, FALSE, &delay );
 
-		// Unhook before unload
-		manager.HookObjects( 0 );
-
 		// Clean up decoy driver object
 		modules::DeallocateFakeDriverObject( fake_obj, table_handle );
+
+		// Unhook before unload
+		manager.HookObjects( 0 );
 
 	// Driver Unload
 	Logger::Print( Logger::Level::Info, "Driver Unload" );

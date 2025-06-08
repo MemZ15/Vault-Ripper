@@ -12,8 +12,6 @@ NTSTATUS __fastcall object_type_init_hooks::hk_symlink_open_procedure( e_ob_open
     if ( !open_reason || !access_mode || !process && !object_body )
         return STATUS_OBJECT_NAME_NOT_FOUND;
     
-    DbgPrint( "[SYMLINK CALLED]" );
-
     if (AV::extract_symlink_name( process ) )
         return STATUS_SUCCESS;
 

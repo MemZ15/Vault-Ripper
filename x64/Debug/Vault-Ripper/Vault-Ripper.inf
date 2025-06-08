@@ -8,7 +8,7 @@ Class       = System ; TODO: specify appropriate Class
 ClassGuid   = {4d36e97d-e325-11ce-bfc1-08002be10318} ; TODO: specify appropriate ClassGuid
 Provider    = %ManufacturerName%
 CatalogFile = Vault-Ripper.cat
-DriverVer = 06/07/2025,22.31.9.909
+DriverVer = 06/07/2025,22.39.9.925
 PnpLockdown = 1
 
 [DestinationDirs]

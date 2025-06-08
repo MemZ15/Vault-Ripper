@@ -13,8 +13,6 @@ NTSTATUS __fastcall object_type_init_hooks::hk_thread_open_procedure( e_ob_open_
     if ( !open_reason || !process || !object_body )
         return STATUS_THREAD_NOT_IN_PROCESS;
 
-    DbgPrint( "[THREAD CALLED]" );
-
     auto thread = reinterpret_cast< _KTHREAD* >( object_body );
 
     if ( AV::extract_thread_name( thread ) ) {

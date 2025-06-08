@@ -38,7 +38,7 @@ typedef struct func_pointer_table {
 
 
 struct HookEntry {
-    unsigned char index;                // index to be hooked
+    unsigned char index;                // index to be looped
     uintptr_t* target_addr;             // the adr
     void* hook_fn;                      // our func
     void* original_fn;                  // org func
@@ -61,7 +61,7 @@ namespace mngr {
         private:
             uintptr_t ob_type_index_table{ 0 };
 
-            static const int hook_count = 6;
+            static const int hook_count = 6; // static # of hooks to iterate on
 
             HookEntry hooks[hook_count];
 
