@@ -42,17 +42,15 @@ extern "C" NTSTATUS DriverEntry() {
 		// Create the Fake Driver Object purely to be used as a decoy
 		PDRIVER_OBJECT fake_obj = modules::AllocateFakeDriverObject( tar_obj, fakeDriver, table_handle );
 
-		test::capture_initalizer_table( base, size, table_handle, obj, 1 );
-
 		// Install hooks
-		manager.HookObjects( true );
+		manager.HookObjects( 1 );
 
 		LARGE_INTEGER delay;
 		delay.QuadPart = -10LL * 1000 * 1000 * 30; // 10 seconds
 		KeDelayExecutionThread( KernelMode, FALSE, &delay );
 
 		// Unhook before unload
-		manager.HookObjects( false );
+		manager.HookObjects( 0 );
 
 		// Clean up decoy driver object
 		modules::DeallocateFakeDriverObject( fake_obj, table_handle );
