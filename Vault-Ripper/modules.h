@@ -14,11 +14,9 @@ namespace modules {
 
 	PDRIVER_OBJECT AllocateFakeDriverObject( PDRIVER_OBJECT tar, PDRIVER_OBJECT fakeDriver, func_pointer_table table_handle );
 
-	void* get_driver_object( const wchar_t* driver_name, PDRIVER_OBJECT& obj, pointer_table table_handle );
-
-	void DeallocateFakeDriverObject( PDRIVER_OBJECT fakeDriver, func_pointer_table table_handle );
-
 	void scan_file_sys(uintptr_t base, size_t size, func_pointer_table table_handle);
+
+	bool check_env();
 
 	void* get_NTFS_driver_object( const wchar_t* device_name, PDRIVER_OBJECT& device_object, pointer_table table_handle );
 

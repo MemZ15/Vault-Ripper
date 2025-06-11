@@ -17,6 +17,8 @@
 #define GetIoDriverObjectType_t_HASH				0xc0892385cfffae01
 #define PsGetProcessPeb_t_HASH						0x3c1a868596349c67
 #define IoThreadToProcess_t_HASH					0xe0cfa10ba8764872
+#define PsLoadedModuleList_HASH						0xbadf95a1217a5a5c
+
 
 namespace globals {
 

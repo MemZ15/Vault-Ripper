@@ -12,6 +12,9 @@ void mngr::hook_win_API( uintptr_t base, size_t size, func_pointer_table& table_
     table_handle.ObGetObjectType = ( ObGetObjectType_t )
         modules::traverse_export_list( OBGetObjectType_HASH, base );
 
+    table_handle.PsLoadedModuleList = ( PsLoadedModuleList_t )
+        modules::traverse_export_list( PsLoadedModuleList_HASH, base );
+
     table_handle.ExAllocatePoolWithTag = ( ExAllocatePoolWithTag_t )
         modules::traverse_export_list( ExAllocatePoolWithTag_HASH, base );
 

