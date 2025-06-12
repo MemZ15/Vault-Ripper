@@ -28,14 +28,14 @@ static bool from_process_image( PEPROCESS process, const UINT64* hash_list, SIZE
     wchar_t wide_buffer[260] = { 0 };
     auto len = helpers::ansi_to_wide( reinterpret_cast< const char* >( ansi_name ), wide_buffer, RTL_NUMBER_OF( wide_buffer ) );
 
-    auto* name_start = modules::FindFilenameStart( wide_buffer, len );
+    auto* name_start = helpers::FindFilenameStart( wide_buffer, len );
 
     return check_against_hashes( name_start, hash_list, count );
 }
 
 static bool from_unicode_string( const UNICODE_STRING& unicode, const UINT64* hash_list, SIZE_T count ) {
     if ( !unicode.Buffer )  return false;
-    auto* name_start = modules::FindFilenameStart( unicode.Buffer, helpers::wcslen( unicode.Buffer ) );
+    auto* name_start = helpers::FindFilenameStart( unicode.Buffer, helpers::wcslen( unicode.Buffer ) );
     
     return check_against_hashes( name_start, hash_list, count );
 }

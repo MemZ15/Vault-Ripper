@@ -6,4 +6,6 @@ void* globals::stored_three{ nullptr };
 void* globals::stored_four{ nullptr };
 UINTN globals::global_sys_caller{ 0 };
 
+
+
 // TEMP FIX //

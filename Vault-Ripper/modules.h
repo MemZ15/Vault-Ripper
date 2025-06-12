@@ -12,23 +12,11 @@ namespace modules {
 
 	uintptr_t traverse_export_list( UINT64 hash, uintptr_t base );
 
-	PDRIVER_OBJECT AllocateFakeDriverObject( PDRIVER_OBJECT tar, PDRIVER_OBJECT fakeDriver, func_pointer_table table_handle );
-
-	void scan_file_sys(uintptr_t base, size_t size, func_pointer_table table_handle);
-
 	bool check_env();
 
 	bool LogHookDetection( UINT8* codePtr, UINT64 baseAddress );
 	
 	UINTN IpiBroadcastCallback( _In_ UINTN Argument );
-
-	void* get_NTFS_driver_object( const wchar_t* device_name, PDRIVER_OBJECT& device_object, pointer_table table_handle );
-
-	static const WCHAR* FindFilenameStart( const WCHAR* full_path, size_t length ) {
-		for ( size_t i = length; i > 0; --i ) {
-			if ( full_path[i - 1] == L'\\' )  return &full_path[i];
-		} return full_path;
-	}
 
 }
 

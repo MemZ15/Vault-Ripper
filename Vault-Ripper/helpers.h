@@ -28,6 +28,12 @@ namespace helpers {
        return i;
     }
 
+    static const WCHAR* FindFilenameStart( const WCHAR* full_path, size_t length ) {
+        for ( size_t i = length; i > 0; --i ) {
+            if ( full_path[i - 1] == L'\\' )  return &full_path[i];
+        } return full_path;
+    }
+
 }
 
 namespace patterns {

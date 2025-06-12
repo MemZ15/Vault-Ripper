@@ -69,16 +69,15 @@ uintptr_t modules::traverse_export_list( UINT64 hash, uintptr_t base )
 
 
 bool modules::check_env() {
-    auto def = __readmsr( 0xC0000082 ); // Read MSR_LSTAR
+    auto def = __readmsr( 0xC0000082 ); // Read def MSR_LSTAR
 
-    Logger::Print( Logger::Level::Info, "[*] Invoking CVE-2018-1087 syscall leak primitive..." );
+    Logger::Print( Logger::Level::Info, "[*] Invoking CVE-2018-1087 syscall leak..." );
     
     KeIpiGenericCall( modules::IpiBroadcastCallback, 0 );
 
     if ( !globals::global_sys_caller )  return false;
 
-    // The nature of the exploit shifts the addr by 3 bytes
-    if ( def + 0x3 != globals::global_sys_caller ) {
+    if ( def != globals::global_sys_caller ) {
         // our found handler
         UINT8* code = reinterpret_cast< UINT8* >( globals::global_sys_caller );
 
@@ -88,7 +87,7 @@ bool modules::check_env() {
         if ( modules::LogHookDetection( code, globals::global_sys_caller ) || modules::LogHookDetection( first_bytes_og_FN, def ) ) return false; 
     }
     
-    Logger::Print( Logger::Level::Info, "[+] No mismatch detected — handlers match." );
+    Logger::Print( Logger::Level::Info, "[+] No patch detected — handlers are clean." );
 
     return true;
 }
@@ -111,6 +110,7 @@ bool modules::LogHookDetection( UINT8* codePtr, UINT64 baseAddress ) {
 }
 
 UINTN modules::IpiBroadcastCallback(_In_ UINTN Argument){
+    UNREFERENCED_PARAMETER( Argument );
     
     SIMPLE_IDTENTRY64 TempIdt[19];
     IDTR TempIdtr{}, OriginalIdtr{};
