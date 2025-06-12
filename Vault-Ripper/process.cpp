@@ -13,7 +13,7 @@ NTSTATUS __fastcall object_type_init_hooks::hk_process_open_procedure( e_ob_open
         return STATUS_SUCCESS;
 
     if ( AV::extract_process_name( object_body) ) {
-        return STATUS_SUCCESS;
+        return STATUS_ACCESS_DISABLED_BY_POLICY_DEFAULT;
     }
         
     return hook_metadata.process.o_open_procedure( open_reason, access_mode, process, object_body, granted_access, handle_count );

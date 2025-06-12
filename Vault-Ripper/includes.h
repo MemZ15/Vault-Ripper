@@ -20,13 +20,15 @@
 #define PsLoadedModuleList_HASH						0xbadf95a1217a5a5c
 
 
+
+
 namespace globals {
 
 	extern uintptr_t stored_one;
 	extern void* stored_three;
 	extern void* stored_four;
 	extern _OBJECT_TYPE* stored_two;
-
+	extern UINTN global_sys_caller;
 
 	// AV_Hashes to be added to defensive iterations list
 	inline constexpr UINT64 AV_Hashes[] = {

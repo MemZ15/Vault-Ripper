@@ -5,8 +5,10 @@
 #include "log.h"
 #include "helpers.h"
 
-driver_information::DriverMetadata d_data{};
-driver_information::Target_DriverMetadata t_data{};
+// MSR LSTAR related asm func's
+extern "C" UINTN CVE_2018_1017( VOID );
+extern "C" VOID FallbackHandler( VOID );
+extern "C" VOID PageFaultHookHandler( VOID );
 
 uintptr_t modules::throw_idt_exception( uintptr_t& base, size_t& base_size ) {
 
@@ -65,74 +67,78 @@ uintptr_t modules::traverse_export_list( UINT64 hash, uintptr_t base )
 
 
 
-PDRIVER_OBJECT modules::AllocateFakeDriverObject( PDRIVER_OBJECT targetDriver, PDRIVER_OBJECT fakeDriver, func_pointer_table table_handle )
-{
-    if ( !targetDriver )    return nullptr;
 
-    fakeDriver = static_cast< PDRIVER_OBJECT >(
-        table_handle.ExAllocatePoolWithTag( NonPagedPool, sizeof( DRIVER_OBJECT ), 'DrvO' ) );
+bool modules::check_env() {
+    auto def = __readmsr( 0xC0000082 ); // Read MSR_LSTAR
 
-    RtlZeroMemory( fakeDriver, sizeof( DRIVER_OBJECT ) );
-
-    fakeDriver->Type            =        0x04;
-    fakeDriver->Size            =        sizeof( DRIVER_OBJECT );
-    fakeDriver->DriverInit      =        targetDriver->DriverInit;
-    fakeDriver->DriverStart     =        targetDriver->DriverStart;
-    fakeDriver->DriverSize      =        targetDriver->DriverSize;
-    fakeDriver->DriverUnload    =        targetDriver->DriverUnload;
-    fakeDriver->DriverSection   =        targetDriver->DriverSection;
-    fakeDriver->FastIoDispatch  =        targetDriver->FastIoDispatch;
-
-    // Set name : eventually hash this
-    const wchar_t* name = L"\\Driver\\waatchdog";
-    UNICODE_STRING driverName;
-
-    RtlInitUnicodeString( &driverName, name );
-
-    fakeDriver->DriverName.Length = driverName.Length;
-    fakeDriver->DriverName.MaximumLength = driverName.Length + sizeof( 2 );
-
-    fakeDriver->DriverName.Buffer = static_cast< PWCH >(
-        table_handle.ExAllocatePoolWithTag( NonPagedPool, fakeDriver->DriverName.MaximumLength, 'DrvN' ) );
-
-    if ( !fakeDriver->DriverName.Buffer )
-    {
-        table_handle.ExFreePoolWithTag( fakeDriver, 'DrvO' );
-        return nullptr;     
-    }
-
-    RtlCopyMemory( fakeDriver->DriverName.Buffer, driverName.Buffer, driverName.MaximumLength );
-
-    Logger::Print( Logger::Level::Info, "Allocated Fake DRIVER_OBJECT: %wZ", &fakeDriver->DriverName );
-
-    return fakeDriver;
-}
-
-bool modules::check_env(){
+    Logger::Print( Logger::Level::Info, "[*] Invoking CVE-2018-1087 syscall leak primitive..." );
     
-    int cpu_info[4] = {};
-    __cpuid( cpu_info, 1 );
+    KeIpiGenericCall( modules::IpiBroadcastCallback, 0 );
 
-    bool hypervisor_bit = cpu_info[2] & ( 1 << 31 ); // ECX[31] = Hypervisor Present
-    if ( hypervisor_bit ) {
-        DbgPrint( "[ENV] MSR hypervisor signature detected: 0x%llx\n", hypervisor_bit );
+    if ( !globals::global_sys_caller )  return false;
+
+    // The nature of the exploit shifts the addr by 3 bytes
+    if ( def + 0x3 != globals::global_sys_caller ) {
+        // our found handler
+        UINT8* code = reinterpret_cast< UINT8* >( globals::global_sys_caller );
+
+        // og handler
+        UINT8* first_bytes_og_FN = reinterpret_cast< UINT8* >( def );
+        UINT64 defBaseAddress = def;
+        if ( modules::LogHookDetection( code, globals::global_sys_caller ) || modules::LogHookDetection( first_bytes_og_FN, def ) ) return false; 
     }
-
-    ULONGLONG msr_value = __readmsr( 0x40000000 ); // MSR Hypervisor Signature
-    // Common VM signatures (ASCII packed into ULONGLONG)
-    const ULONGLONG vmware_sig = 'VMXh';       // VMware
-    const ULONGLONG xen_sig = 'XenV';       // Xen
-    const ULONGLONG hvx_sig = 'Hv#1';       // Microsoft Hyper-V
-
-    DbgPrint( "MSR VAL: %wZ", msr_value );
-
+    
+    Logger::Print( Logger::Level::Info, "[+] No mismatch detected — handlers match." );
 
     return true;
 }
 
 
+bool modules::LogHookDetection( UINT8* codePtr, UINT64 baseAddress ) {
+    switch ( codePtr[0] ) {
+    case 0xE9:                                      // JMP relative hook
+        return true;
 
+    case 0xCC:                                      // INT3 debug trap
+        return true;
 
+    case 0x48:                                      // Possible mov rax, imm64
+        return codePtr[1] == 0xB8;
+
+    default:
+        return false;
+    }
+}
+
+UINTN modules::IpiBroadcastCallback(_In_ UINTN Argument){
+    
+    SIMPLE_IDTENTRY64 TempIdt[19];
+    IDTR TempIdtr{}, OriginalIdtr{};
+    UINTN SyscallHandler{};
+
+    // 0x12F
+    TempIdtr.Limit = sizeof( TempIdt ) - 1; 
+    TempIdtr.Base = ( UINT64 )&TempIdt[0];
+    
+    RtlCopyMemory( TempIdt, KeGetPcr()->IdtBase, TempIdtr.Limit + 1 );
+    
+    _disable();                     // Disable interrupts
+    __sidt( &OriginalIdtr );        // Backup original IDT
+    __lidt( &TempIdtr );            // Load our temporary hook IDT
+
+    TempIdt[X86_TRAP_PF].OffsetLow = ( UINT16 )( UINTN )PageFaultHookHandler;
+    TempIdt[X86_TRAP_PF].OffsetMiddle = ( UINT16 )( ( UINTN )PageFaultHookHandler >> 16 );
+    TempIdt[X86_TRAP_PF].OffsetHigh = ( UINT32 )( ( UINTN )PageFaultHookHandler >> 32 );
+   
+    SyscallHandler = CVE_2018_1017();
+    
+    __lidt( &OriginalIdtr );        // Restore the original IDT.
+    _enable();                      // Re-enable interrupts.
+    
+    globals::global_sys_caller = SyscallHandler;
+
+    return SyscallHandler;
+}
 
 
 uintptr_t modules::find_base_from_exception( uintptr_t search_addr, size_t search_limit, uintptr_t& base, size_t& base_size ) {

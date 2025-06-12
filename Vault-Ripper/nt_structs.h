@@ -910,6 +910,7 @@ typedef struct _MY_KPROCESS {
 } MY_KPROCESS, * PMY_KPROCESS;
 
 
+#define KeGetPcr() ((PKPCR)__readgsqword((unsigned long)FIELD_OFFSET(KPCR, Self)))
 
 
 //0xe0 bytes (sizeof)
@@ -976,7 +977,40 @@ struct _OBJECT_HEADER {
     uint64_t Body;           // +0x020 Body
 };
 
+typedef ULONG_PTR UINTN;
 
+// Map of BASE Address of GS (R/W). If CPUID.80000001:EDX.[29] = 1.
+#define MSR_GS_BASE 0xC0000101
+// Swap Target of BASE Address of GS (R/W). If CPUID.80000001:EDX.[29] = 1.
+#define MSR_KERNEL_GS_BASE 0xC0000102
+
+#define X86_TRAP_DE            0   // Divide Error (no error)
+#define X86_TRAP_DB            1   // Debug trap (no error)
+#define X86_TRAP_NMI           2   // Non-maskable Interrupt (no error)
+#define X86_TRAP_BP            3   // Breakpoint Exception (INT3) (no error)
+#define X86_TRAP_OF            4   // Overflow (INTO) (no error)
+#define X86_TRAP_BR            5   // Bounds Range Exceeded (no error)
+#define X86_TRAP_UD            6   // Undefined Opcode (no error)
+#define X86_TRAP_NM            7   // No Math or Device not available (WAIT/FWAIT) (no error)
+#define X86_TRAP_DF            8   // Double Fault (error)
+#define X86_TRAP_OLD_MF        9   // 80x87 FP coprocessor operand fetch fault (no error)
+#define X86_TRAP_TS            10  // Invalid TSS fault (error)
+#define X86_TRAP_NP            11  // Segment Not Present (error)
+#define X86_TRAP_SS            12  // Stack-segment Fault (error)
+#define X86_TRAP_GP            13  // General Protection Fault (error)
+#define X86_TRAP_PF            14  // Page Fault (error)
+#define X86_TRAP_SPURIOUS      15  // Reserved/Spurious Interrupt
+#define X86_TRAP_RESERVED      15  // Intel Reserved (error)
+#define X86_TRAP_MF            16  // x87 Floating-Point Exception (no error)
+#define X86_TRAP_AC            17  // Alignment check (error)
+#define X86_TRAP_MC            18  // Machine Check (no error)
+#define X86_TRAP_XF            19  // SIMD Floating-Point Exception (no error)
+#define X86_TRAP_VE            20  // Intel Virtualization Exception (no error)
+#define X86_TRAP_VC            29  // AMD VMM Communication Exception
+#define X86_TRAP_SX            30  // AMD Security Exception
+#define X86_TRAP_IRET          32  // IRET Exception
+
+#define SWAPGS_LENGTH 3
 
 //0x4e0 bytes (sizeof)
 struct _ETHREAD

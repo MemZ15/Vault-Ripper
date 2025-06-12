@@ -4,6 +4,7 @@
 #include "hooks.h"
 
 
+
 extern "C" NTSTATUS DriverEntry() {
 
 	auto status = STATUS_SUCCESS;
@@ -24,6 +25,8 @@ extern "C" NTSTATUS DriverEntry() {
 
 	size_t size{};
 
+	UINTN arg{};
+
 	//const wchar_t* test = L"PsLoadedModuleList";
 	//auto encrpy = hash::salted_hash_string_ci( test, helpers::wcslen( test ) );
 	//DbgPrint( "Hash: %llx", encrpy );
@@ -32,8 +35,8 @@ extern "C" NTSTATUS DriverEntry() {
 		func_pointer_table table_handle = { 0 };
 
 		// Check if driver is running in debugger or hypervisor env]
-		modules::check_env();
-	
+		if ( !modules::check_env() ) return status;
+
 		// Find NTOSKRNL Base
 		status = modules::throw_idt_exception( base, size );
 

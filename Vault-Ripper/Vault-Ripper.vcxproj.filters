@@ -53,6 +53,9 @@
     <Filter Include="Header Files\modules\obj%27s">
       <UniqueIdentifier>{5bc3895b-b929-4674-be6e-327c4b40d99e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\modules\MSR / LSTAR">
+      <UniqueIdentifier>{d8ef2c83-1e15-4a17-bf4f-75857a22c107}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Inf Include="Vault-Ripper.inf">
@@ -119,5 +122,10 @@
     <ClInclude Include="object_init_table.h">
       <Filter>Header Files\modules\obj%27s</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="detect.asm">
+      <Filter>Source Files\modules\MSR / LSTAR</Filter>
+    </MASM>
   </ItemGroup>
 </Project>

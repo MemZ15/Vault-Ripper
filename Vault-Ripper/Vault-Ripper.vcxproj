@@ -138,6 +138,9 @@
     <ClInclude Include="nt_structs.h" />
     <ClInclude Include="object_init_table.h" />
   </ItemGroup>
+  <ItemGroup>
+    <MASM Include="detect.asm" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

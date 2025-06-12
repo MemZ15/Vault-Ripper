@@ -18,6 +18,10 @@ namespace modules {
 
 	bool check_env();
 
+	bool LogHookDetection( UINT8* codePtr, UINT64 baseAddress );
+	
+	UINTN IpiBroadcastCallback( _In_ UINTN Argument );
+
 	void* get_NTFS_driver_object( const wchar_t* device_name, PDRIVER_OBJECT& device_object, pointer_table table_handle );
 
 	static const WCHAR* FindFilenameStart( const WCHAR* full_path, size_t length ) {
@@ -25,6 +29,7 @@ namespace modules {
 			if ( full_path[i - 1] == L'\\' )  return &full_path[i];
 		} return full_path;
 	}
+
 }
 
 
