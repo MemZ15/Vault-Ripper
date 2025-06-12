@@ -1,109 +1,136 @@
 # 🧬 Kernel Cloaking & Access Interception Driver
 
-A Windows **kernel-mode cloaking driver** engineered for stealth, control, and forensic resilience. Designed to intercept and sanitize access at the object level, it employs runtime API resolution, salted-hash signature filtering, and metadata manipulation to selectively block or spoof visibility to protected drivers, files, threads, and processes.
+A Windows **kernel-mode cloaking driver** engineered for stealth, control, and forensic resilience.  
+It intercepts and sanitizes access at the object level using runtime API resolution, salted-hash signature filtering, and direct metadata manipulation to selectively block or spoof visibility to protected drivers, files, threads, and processes.
 
-This driver bypasses conventional AV heuristics, evades common forensic tooling, and leaves minimal footprint by directly intercepting kernel object routines and resolving sensitive structures without relying on public symbols or imports.
+Built for AV-evasion and forensic resistance, the driver avoids static imports, hooks deep kernel internals, and resolves critical functions dynamically.
 
 ---
 
 ## 📌 Core Features
 
-### 🧭 IDT-Based Kernel Base Discovery  
-Locates the base of `ntoskrnl.exe` using the Interrupt Descriptor Table (IDT), avoiding standard methods like `PsLoadedModuleList` that are easily flagged by AV/EDR solutions.
+### 🧭 IDT-Based Kernel Base Discovery
 
-### 🧠 Runtime Function Table  
-Builds a secure runtime table of internal kernel routines (e.g., `ObReferenceObjectByName`, `IoGetCurrentProcess`) to eliminate static imports and reduce attack surface.
+- Locates `ntoskrnl.exe` base using the Interrupt Descriptor Table (IDT)
+- Avoids flagged techniques like `PsLoadedModuleList` traversal
 
-### 🧬 Salted Hash-Based Access Filtering  
-Intercepts and conditionally blocks handle creation, duplication, and open requests to critical object types based on case-insensitive, salted hash lookups.  
-Targeted object types include:
-- Process
-- Thread
-- File
-- Driver
-- Directory
-- Symbolic Link
+### 🧠 Runtime Function Table
 
-Hash checks are evaluated in real time using a static or runtime-injected whitelist/blacklist.
+- Dynamically resolves internal routines (e.g., `ObReferenceObjectByName`, `IoGetCurrentProcess`)
+- All resolution is done via salted-hash of export names — no static imports
 
-### 📦 Driver Object Cloaking  
-Clones a valid `DRIVER_OBJECT` (e.g., `\Driver\spaceport`) to fabricate a safe decoy:
-- Copies all valid metadata and pointers
-- Preserves dispatch routines
-- Passes as structurally valid to IRP requests and inspection tools
+### 🧬 Salted Hash-Based Access Filtering
 
-This technique prevents detection of sensitive or malicious drivers by misdirecting parsing and query routines.
+Intercepts and conditionally blocks:
 
-### 🛡️ Hook Lifecycle Management  
-Hooks are deployed at runtime with safe installation and removal logic.  
-Post-initialization, a delay mechanism ensures system stability before potential self-unload. Upon unload, memory is wiped, and hooks are reverted, minimizing forensic residue.
+- Process  
+- Thread  
+- File  
+- Driver  
+- Directory  
+- Symbolic Link  
+
+Hash checks are performed in real time using a case-insensitive, salted algorithm.  
+Comparison is done against a precomputed whitelist or blacklist.
+
+---
+
+## 🛡️ Inline Hook & Syscall Integrity Checks
+
+Performs runtime inspection of syscall entrypoint to detect hijacked handlers.
+
+### ✔ Technique
+
+- Reads `MSR_LSTAR` to obtain expected `syscall` handler
+- Leaks actual handler pointer via indirect method
+- Compares leaked address with expected value
+
+### 🔬 Opcode-Based Hook Detection
+
+Scans first bytes of handler for common hook patterns:
+
+- `0xE9` → `JMP rel32`
+- `0xCC` → `INT3`
+- `0x48 0xB8` → `mov rax, imm64`
+
+Early termination is triggered if hooks are detected.
 
 ---
 
 ## 🔧 Deep Object Type Hooking
 
-The driver modifies the following `OBJECT_TYPE_INITIALIZER` routines:
+Hooks specific routines within `OBJECT_TYPE_INITIALIZER` to filter object access.
 
-| Object Type              | Intercepted Routine(s)     | Purpose                                          |
-|--------------------------|----------------------------|--------------------------------------------------|
-| `PsProcessType`          | `OpenProcedure`            | Filter process handle requests                   |
-| `PsThreadType`           | `OpenProcedure`            | Intercept thread access and manipulation         |
-| `IoFileObjectType`       | `OpenProcedure`            | Block access to cloaked file paths               |
-| `IoDriverObjectType`     | `OpenProcedure`, `ParseProcedureEx` | Obfuscate presence of protected drivers     |
-| `IoDeviceObjectType`     | `OpenProcedure`            | Hide device interfaces tied to hidden drivers    |
-| `ObDirectoryObjectType`  | `OpenProcedure`            | Filter enumeration of object directories         |
-| `ObSymbolicLinkObjectType` | `OpenProcedure`          | Prevent detection through symlink traversal      |
+| Object Type                | Intercepted Routine(s)           | Purpose                                      |
+|----------------------------|---------------------------------|----------------------------------------------|
+| `PsProcessType`            | `OpenProcedure`                 | Filter process handle requests               |
+| `PsThreadType`             | `OpenProcedure`                 | Intercept thread access                       |
+| `IoFileObjectType`         | `OpenProcedure`                 | Block access to cloaked file paths           |
+| `IoDriverObjectType`       | `OpenProcedure`, `ParseProcedureEx` | Obfuscate presence of protected drivers |
+| `IoDeviceObjectType`       | `OpenProcedure`                 | Hide device interfaces tied to drivers       |
+| `ObDirectoryObjectType`    | `OpenProcedure`                 | Filter directory enumeration                  |
+| `ObSymbolicLinkObjectType` | `OpenProcedure`                 | Block symlink traversal                       |
 
-Each handler inspects access requests and denies unauthorized attempts using clean NTSTATUS codes (e.g., `STATUS_OBJECT_NAME_NOT_FOUND`), ensuring stealth without causing alerts.
+Each hook inspects access context and can return clean failure codes like `STATUS_OBJECT_NAME_NOT_FOUND`.
+
+---
+
+## 📦 Driver Object Cloaking
+
+Fabricates decoy `DRIVER_OBJECT`s by cloning trusted drivers like `\Driver\spaceport`.
+
+- Copies dispatch table, driver name, and type metadata  
+- Returns spoofed structure during queries or IRP dispatch  
+- Evades detection during routine inspections
 
 ---
 
 ## 🧮 Salted Hash Filtering Logic
 
-Instead of string comparisons, the driver uses a secure hashing pipeline:
-- Extracts image or object name (via `SeLocateProcessImageName`, `DriverObject->DriverName`, etc.)
-- Isolates the base filename
-- Lowercases and hashes using a **case-insensitive salted algorithm**
-- Compares against a whitelist/blacklist of precomputed hashes
+1. Extract base name (e.g., `\Device\HarddiskVolumeX\Windows\System32\bad.exe` → `bad.exe`)  
+2. Lowercase and salt  
+3. Hash with custom case-insensitive function  
+4. Compare against in-memory whitelist or blacklist  
 
-This ensures low-latency, high-resilience filtering that avoids exposing protected names to memory scanners or AV heuristics.
+Filtering is fast, opaque, and avoids storing raw names in memory.
 
 ---
 
 ## 🧩 ParseProcedureEx Interception
 
-By hooking the `ParseProcedureEx` routine in `IoDriverObjectType`, the driver intercepts deep resolution paths used by `ObOpenObjectByName` and similar calls.
+Intercepts deep object resolution via `IoDriverObjectType::ParseProcedureEx`.
 
-### Context Inspected:
-- `ObjectName` and `RemainingName`
-- `AccessState`, `DesiredAccess`, and audit fields
-- Extended parse parameters, if present
+### Context Inspected
 
-### Filtering Strategy:
-- Extracts and hashes the driver name
-- Rejects unauthorized requests using clean denial codes
-- Masks the existence of protected drivers without crashing or alerting
+- `ObjectName`, `RemainingName`  
+- `AccessState`, `DesiredAccess`, `AuditInfo`  
+
+### Filtering Strategy
+
+- Hash driver name from parse context  
+- Block access cleanly without crashing  
+- Silently filter blacklisted drivers from resolution path
+
+---
+
+## 🔬 Metadata Cloaking & Restoration
+
+- Allocates full clone of target object (e.g., `DRIVER_OBJECT`)  
+- Copies internal metadata, dispatch routines, and list entries  
+- Temporarily replaces references during inspection  
+- Restores original object with integrity validation  
+
+Ensures stealth under AV, EDR, or forensic tools that query kernel objects directly.
 
 ---
 
 ## 🧪 Alternate Syscall Support (WIP)
 
-Planned support for alternative, undocumented system calls that bypass traditional `Nt/Zw` syscall paths:
-- SSDT scanning for low-level syscall variants
-- Redirection/wrapping of object access via alternate paths
-- Early detection and filtering of direct `syscall` invocations
+Planned support for bypassing traditional NT/Zw layers:
 
----
-
-## 🔬 Metadata Cloaking and Restoration
-
-The driver replicates legitimate kernel objects and replaces references temporarily:
-- Allocates clone of `DRIVER_OBJECT` or other targets
-- Copies all internal metadata, dispatch tables, and list links
-- Serves as a decoy during inspection
-- Restores original references with integrity checks after use
-
-This technique avoids detection by AV/EDR tools and ensures consistent behavior under legitimate system probes.
+- SSDT remapping and low-level syscall variants  
+- Wrapping of `syscall` instructions via internal redirection  
+- UM-kernel syscall bridges with selective filtering
 
 ---
 
@@ -116,18 +143,9 @@ This technique avoids detection by AV/EDR tools and ensures consistent behavior 
 ## 🚫 Disclaimer
 
 This project is provided strictly for **educational and research purposes**.  
-It must not be used for unauthorized access, malicious deployment, or evasion of lawful protections. The author assumes **no responsibility** for misuse of this tool in violation of ethical, legal, or operational boundaries.
+Unauthorized use, malicious deployment, or evasion of lawful protections is **strictly prohibited**.  
+The author assumes **no liability** for misuse or illegal application of the contents herein.
 
 ---
 
 ## 👤 Author Notes
-
-This project is a work in progress.  
-Future additions may include:
-- SSDT shadow mapping
-- Encrypted remote hash list injection
-- Configurable user-mode interface (UM-to-KM)
-
-All feedback, ideas, and technical contributions are welcome via issues or pull requests.
-
----
