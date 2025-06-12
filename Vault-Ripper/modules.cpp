@@ -66,12 +66,10 @@ uintptr_t modules::traverse_export_list( UINT64 hash, uintptr_t base )
 }
 
 
-
-
 bool modules::check_env() {
     auto def = __readmsr( 0xC0000082 ); // Read def MSR_LSTAR
 
-    Logger::Print( Logger::Level::Info, "[*] Invoking CVE-2018-1087 syscall leak..." );
+    Logger::Print( Logger::Level::Info, "Invoking CVE-2018-1087 syscall leak..." );
     
     KeIpiGenericCall( modules::IpiBroadcastCallback, 0 );
 
@@ -87,7 +85,7 @@ bool modules::check_env() {
         if ( modules::LogHookDetection( code, globals::global_sys_caller ) || modules::LogHookDetection( first_bytes_og_FN, def ) ) return false; 
     }
     
-    Logger::Print( Logger::Level::Info, "[+] No patch detected — handlers are clean." );
+    Logger::Print( Logger::Level::Info, "No patch detected — handlers are clean." );
 
     return true;
 }
@@ -95,15 +93,12 @@ bool modules::check_env() {
 
 bool modules::LogHookDetection( UINT8* codePtr, UINT64 baseAddress ) {
     switch ( codePtr[0] ) {
-    case 0xE9:                                      // JMP relative hook
-        return true;
-
-    case 0xCC:                                      // INT3 debug trap
-        return true;
-
-    case 0x48:                                      // Possible mov rax, imm64
-        return codePtr[1] == 0xB8;
-
+        case 0xE9:                                      // JMP relative hook
+            return true;
+        case 0xCC:                                      // INT3 debug trap
+            return true;
+        case 0x48:                                      // Possible mov rax, imm64
+            return codePtr[1] == 0xB8;
     default:
         return false;
     }
