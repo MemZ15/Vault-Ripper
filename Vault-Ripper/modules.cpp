@@ -81,7 +81,6 @@ bool modules::check_env() {
 
         // og handler
         UINT8* first_bytes_og_FN = reinterpret_cast< UINT8* >( def );
-        UINT64 defBaseAddress = def;
         if ( modules::LogHookDetection( code, globals::global_sys_caller ) || modules::LogHookDetection( first_bytes_og_FN, def ) ) return false; 
     }
     
