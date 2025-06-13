@@ -1,6 +1,6 @@
 ﻿  Building 'Vault-Ripper' with toolset 'WindowsKernelModeDriver10.0' and the 'Universal' target platform.
   Stamping x64\Debug\Vault-Ripper.inf
-  Stamping [Version] section with DriverVer=06/11/2025,23.44.17.500
+  Stamping [Version] section with DriverVer=06/13/2025,0.10.27.880
   Vault-Ripper.vcxproj -> D:\Projects\Vault-Ripper\Vault-Ripper\x64\Debug\Vault-Ripper.sys
   Driver is 'Universal'.
   .........................

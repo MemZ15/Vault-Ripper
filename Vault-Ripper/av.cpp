@@ -55,29 +55,33 @@ static bool extract_thread_name( PETHREAD thread, const UINT64* hash_list, SIZE_
 
 
 bool AV::extract_process_name( PEPROCESS process ) {
-    return from_process_image( process, globals::AV_Hashes, RTL_NUMBER_OF( globals::AV_Hashes ) );
+    return from_process_image( process, globals::AV_PROCESS_THREADS, RTL_NUMBER_OF( globals::AV_PROCESS_THREADS ) );
 }
 
 bool AV::extract_symlink_name( PEPROCESS process ) {
-    return from_process_image( process, globals::AV_Hashes, RTL_NUMBER_OF( globals::AV_Hashes ) );
+    return from_process_image( process, globals::AV_PROCESS_THREADS, RTL_NUMBER_OF( globals::AV_PROCESS_THREADS ) );
 }
 
 bool AV::extract_directory_name( PEPROCESS process ) {
-    return from_process_image( process, globals::AV_Hashes, RTL_NUMBER_OF( globals::AV_Hashes ) );
+    return from_process_image( process, globals::Tracked_Files, RTL_NUMBER_OF( globals::Tracked_Files ) );
 }
 
 bool AV::extract_thread_name( PETHREAD thread ) {
-    return extract_thread_name( thread, globals::AV_Hashes, RTL_NUMBER_OF( globals::AV_Hashes ) );
+    return extract_thread_name( thread, globals::AV_PROCESS_THREADS, RTL_NUMBER_OF( globals::AV_PROCESS_THREADS ) );
 }
 
 bool AV::extract_driver_name( PDRIVER_OBJECT driver_object ) {
-    return from_unicode_string( driver_object->DriverName, globals::AV_Hashes, RTL_NUMBER_OF( globals::AV_Hashes ) );
+    return from_unicode_string( driver_object->DriverName, globals::DRIVER_HASHES, RTL_NUMBER_OF( globals::DRIVER_HASHES ) );
+}
+
+bool AV::extract_device_name( PDEVICE_OBJECT dev_object ) {
+    return from_unicode_string( dev_object->DriverObject->DriverName, globals::DRIVER_HASHES, RTL_NUMBER_OF( globals::DRIVER_HASHES ) );
 }
 
 bool AV::extract_file_name( FILE_OBJECT* file_object ) {
-    return from_file_object( file_object, globals::AV_Hashes, RTL_NUMBER_OF( globals::AV_Hashes ) );
+    return from_file_object( file_object, globals::Tracked_Files, RTL_NUMBER_OF( globals::Tracked_Files ) );
 }
 
 bool AV::protect_file( FILE_OBJECT* file_object ) {
-    return from_file_object( file_object, globals::Hashed_Names, RTL_NUMBER_OF( globals::Hashed_Names ) );
+    return from_file_object( file_object, globals::Tracked_Files, RTL_NUMBER_OF( globals::Tracked_Files ) );
 }

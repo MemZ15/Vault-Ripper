@@ -117,6 +117,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="av.cpp" />
+    <ClCompile Include="device.cpp" />
     <ClCompile Include="misc.cpp" />
     <ClCompile Include="symlink.cpp" />
     <ClCompile Include="dir.cpp" />
@@ -128,6 +129,7 @@
     <ClCompile Include="modules.cpp" />
     <ClCompile Include="process.cpp" />
     <ClCompile Include="thread.cpp" />
+    <ClCompile Include="vm_handler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers.h" />

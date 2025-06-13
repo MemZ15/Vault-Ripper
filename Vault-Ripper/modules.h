@@ -4,6 +4,12 @@
 #include "helpers.h"
 #include "modules.h"
 
+enum MsrAccessType {
+	Read,
+	Write
+};
+
+
 namespace modules {
 
 	uintptr_t throw_idt_exception(uintptr_t &base, size_t &base_size);
@@ -18,7 +24,10 @@ namespace modules {
 	
 	UINTN IpiBroadcastCallback( _In_ UINTN Argument );
 
+	VOID VmmHandleMsrAccess( _In_ PVIRTUAL_CPU Vcpu, _In_ MsrAccessType accessType );
+
 }
+
 
 
 namespace driver_information {

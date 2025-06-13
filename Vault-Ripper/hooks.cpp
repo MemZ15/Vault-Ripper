@@ -58,8 +58,9 @@ mngr::HookManager::HookManager( uintptr_t ob_type_index_table_base ) : ob_type_i
     hooks[1] = { 4, nullptr, reinterpret_cast< void* >( object_type_init_hooks::hk_symlink_open_procedure ), nullptr };
 	hooks[2] = { 7, nullptr, reinterpret_cast< void* >( object_type_init_hooks::hk_process_open_procedure ), nullptr };
 	hooks[3] = { 8, nullptr, reinterpret_cast< void* >( object_type_init_hooks::hk_thread_open_procedure ), nullptr };
-	hooks[4] = { 34, nullptr, reinterpret_cast< void* >( object_type_init_hooks::hk_driver_parse_procedure_ex ), nullptr };
-	hooks[5] = { 37, nullptr, reinterpret_cast< void* >( object_type_init_hooks::hk_file_parse_procedure_ex ), nullptr };
+    hooks[4] = { 33, nullptr, reinterpret_cast< void* >( object_type_init_hooks::hk_device_open_procedure ), nullptr };
+	hooks[5] = { 34, nullptr, reinterpret_cast< void* >( object_type_init_hooks::hk_driver_parse_procedure_ex ), nullptr };
+	hooks[6] = { 37, nullptr, reinterpret_cast< void* >( object_type_init_hooks::hk_file_parse_procedure_ex ), nullptr };
 }
 
 _OBJECT_TYPE* mngr::HookManager::GetObjectByIndex( unsigned char idx ) const {
@@ -81,6 +82,7 @@ bool mngr::HookManager::HookObjects( bool install ) {
                 case 4: hook_metadata.symlink.o_open_procedure = reinterpret_cast< open_procedure_ty >( orig_fn ); break;
                 case 7: hook_metadata.process.o_open_procedure = reinterpret_cast< open_procedure_ty >( orig_fn ); break;
                 case 8: hook_metadata.thread.o_open_procedure = reinterpret_cast< open_procedure_ty >( orig_fn ); break;
+                case 33: hook_metadata.device.o_open_procedure = reinterpret_cast< open_procedure_ty >( orig_fn ); break;
                 case 34: hook_metadata.driver.o_parse_procedure_ex_detail = reinterpret_cast< parse_procedure_ex_ty >( orig_fn ); break;
                 case 37: hook_metadata.file.o_parse_procedure_ex_detail = reinterpret_cast< parse_procedure_ex_ty >( orig_fn ); break;
             }
@@ -100,7 +102,7 @@ bool mngr::HookManager::HookObjects( bool install ) {
 
         // Process, Thread, Symlink, Directory
         switch ( hooks[i].index ) {
-            case 3: case 4: case 7: case 8: {
+            case 3: case 4: case 7: case 8: case 33: {
                 open_procedure_ty* open_ptr = &obj->TypeInfo.open_procedure;
                 hook_unhook( open_ptr, hooks[i].original_fn );
                 break;

@@ -368,7 +368,7 @@ using security_procedure_ty = int( __fastcall* )( void*, SECURITY_OPERATION_CODE
 using query_name_procedure_ty = int( __fastcall* )( void*, unsigned char, object_name_information*, unsigned int, unsigned int*, char );
 using okay_to_close_procedure_ty = unsigned char( __fastcall* )( PEPROCESS, void*, void*, char );
 using parse_procedure_ty = int( __fastcall* )( void*, void*);
-using parse_procedure_ex_ty = int( __fastcall* )( void*, void*);
+using parse_procedure_ex_ty = int( __fastcall* )( void*, void*, UNICODE_STRING*, UNICODE_STRING* );
 
 
 struct object_type_initializer
@@ -402,7 +402,7 @@ struct object_type_initializer
     void( __fastcall* delete_procedure )( void* );
 
     int( __fastcall* parse_procedure )( void*, void*);
-    int( __fastcall* parse_procedure_ex )( void*, void*);
+    int( __fastcall* parse_procedure_ex )( void*, void*, UNICODE_STRING*, UNICODE_STRING* );
 
     int( __fastcall* security_procedure )( void*, SECURITY_OPERATION_CODE, unsigned int*, void*, unsigned int*, void**, POOL_TYPE, GENERIC_MAPPING*, char );
     int( __fastcall* query_name_procedure )( void*, unsigned char, object_name_information*, unsigned int, unsigned int*, char );
@@ -508,17 +508,17 @@ struct ob_type_hook_pair {
         okay_to_close_procedure_ty      o_okay_to_close_procedure;
     } file;
 
-    struct ALPCHook {
+    struct Device {
         dump_procedure_ty               o_dump_procedure;
         open_procedure_ty               o_open_procedure;
         close_procedure_ty              o_close_procedure;
         delete_procedure_ty             o_delete_procedure;
         parse_procedure_ty              o_parse_procedure_detail;
+        parse_procedure_ex_ty           o_parse_procedure_ex_detail;
         security_procedure_ty           o_security_procedure;
         query_name_procedure_ty         o_query_name_procedure;
-        parse_procedure_ty              parse_procedure;
         okay_to_close_procedure_ty      o_okay_to_close_procedure;
-    } ALPC;
+    } device;
 
     struct ThreadObjectHook {
         dump_procedure_ty               o_dump_procedure;
@@ -532,7 +532,7 @@ struct ob_type_hook_pair {
     } thread;
 };
 
-extern ob_type_hook_pair hook_metadata, debug_object, process, device, file, token, symlink, thread, driver, dir;
+extern ob_type_hook_pair hook_metadata, device, debug_object, process, device, file, token, symlink, thread, driver, dir;
 
 
 struct _IOP_FILE_OBJECT_EXTENSION
@@ -1011,6 +1011,221 @@ typedef ULONG_PTR UINTN;
 #define X86_TRAP_IRET          32  // IRET Exception
 
 #define SWAPGS_LENGTH 3
+#define VMX_MSR(v)                  (v - MSR_IA32_VMX_BASIC)
+
+#pragma once
+#include <ntdef.h>  // Windows kernel types
+
+typedef struct _SEGMENT_DESCRIPTOR {
+    UINT16 Selector;
+    UINT64 Base;
+    UINT32 Limit;
+    UINT16 Attributes;
+} SEGMENT_DESCRIPTOR, * PSEGMENT_DESCRIPTOR;
+
+typedef struct _DESCRIPTOR_TABLE {
+    UINT16 Limit;
+    UINT64 Base;
+} DESCRIPTOR_TABLE, * PDESCRIPTOR_TABLE;
+
+typedef struct _VIRTUAL_CPU {
+    // General Purpose Registers
+    UINT64 Rax;
+    UINT64 Rbx;
+    UINT64 Rcx;
+    UINT64 Rdx;
+    UINT64 Rsi;
+    UINT64 Rdi;
+    UINT64 Rbp;
+    UINT64 Rsp;
+    UINT64 R8;
+    UINT64 R9;
+    UINT64 R10;
+    UINT64 R11;
+    UINT64 R12;
+    UINT64 R13;
+    UINT64 R14;
+    UINT64 R15;
+
+    // Instruction Pointer and Flags
+    UINT64 Rip;
+    UINT64 Rflags;
+
+    // Control Registers
+    UINT64 Cr0;
+    UINT64 Cr2;   // Linear address for last page fault
+    UINT64 Cr3;   // Page directory base
+    UINT64 Cr4;
+
+    // Debug Registers
+    UINT64 Dr0;
+    UINT64 Dr1;
+    UINT64 Dr2;
+    UINT64 Dr3;
+    UINT64 Dr6;
+    UINT64 Dr7;
+
+    // Model Specific Registers (MSRs)
+    UINT64 Efer;          // Extended Feature Register (SYSCALL/SYSRET enable)
+    UINT64 KernelGsBase;  // MSR_KERNEL_GS_BASE
+    UINT64 Star;          // MSR_STAR (syscall segment selectors)
+    UINT64 LStar;         // MSR_LSTAR (syscall handler address)
+    UINT64 CStar;         // MSR_CSTAR (compat syscall handler)
+    UINT64 SfMask;        // MSR_SYSCALL_MASK (flags mask)
+
+    // Segment Registers (Selectors + Bases + Limits + Attributes)
+    SEGMENT_DESCRIPTOR Cs;
+    SEGMENT_DESCRIPTOR Ds;
+    SEGMENT_DESCRIPTOR Ss;
+    SEGMENT_DESCRIPTOR Es;
+    SEGMENT_DESCRIPTOR Fs;
+    SEGMENT_DESCRIPTOR Gs;
+
+    // Descriptor Tables
+    DESCRIPTOR_TABLE Gdtr;
+    DESCRIPTOR_TABLE Idtr;
+
+    // Floating Point and SIMD State (XSAVE area or pointer)
+    void* FpSimdState;
+
+    // VMCS fields (for Intel VT-x) or equivalent virtualization data
+    UINT64 VmcsRevisionId;
+    UINT64 VmcsRegion;
+
+    // Additional virtualization/processor state
+    UINT64 ApicBase;
+
+    // Padding or reserved fields as needed
+    UINT64 Reserved[8];
+
+    // Add this to track the MSR being accessed
+    UINT32 MsrIndex;
+
+    bool NeedsSyscallRehook;
+
+    // Optionally a value to hold MSR read/write data
+    UINT64 MsrValue;
+
+} VIRTUAL_CPU, * PVIRTUAL_CPU;
+
+#define MSR_STAR        0xC0000081  // Segment selectors for syscall/sysret
+#define MSR_LSTAR       0xC0000082  // Syscall target RIP (handler address)
+#define MSR_CSTAR       0xC0000083  // Compatibility mode syscall handler
+#define MSR_SYSCALL_MASK 0xC0000084 // Mask for RFLAGS during syscall
+#define MSR_KERNEL_GS_BASE 0xC0000102 // Kernel GS base MSR
+
+
+//0x10 bytes (sizeof)
+struct _HV_X64_HYPERVISOR_FEATURES
+{
+    union _HV_PARTITION_PRIVILEGE_MASK;                 //0x0
+    ULONG MaxSupportedCState : 4;                                             //0x8
+    ULONG HpetNeededForC3PowerState_Deprecated : 1;                           //0x8
+    ULONG Reserved : 27;                                                      //0x8
+    ULONG MwaitAvailable_Deprecated : 1;                                      //0xc
+    ULONG GuestDebuggingAvailable : 1;                                        //0xc
+    ULONG PerformanceMonitorsAvailable : 1;                                   //0xc
+    ULONG CpuDynamicPartitioningAvailable : 1;                                //0xc
+    ULONG XmmRegistersForFastHypercallAvailable : 1;                          //0xc
+    ULONG GuestIdleAvailable : 1;                                             //0xc
+    ULONG HypervisorSleepStateSupportAvailable : 1;                           //0xc
+    ULONG NumaDistanceQueryAvailable : 1;                                     //0xc
+    ULONG FrequencyRegsAvailable : 1;                                         //0xc
+    ULONG SyntheticMachineCheckAvailable : 1;                                 //0xc
+    ULONG GuestCrashRegsAvailable : 1;                                        //0xc
+    ULONG DebugRegsAvailable : 1;                                             //0xc
+    ULONG Npiep1Available : 1;                                                //0xc
+    ULONG DisableHypervisorAvailable : 1;                                     //0xc
+    ULONG ExtendedGvaRangesForFlushVirtualAddressListAvailable : 1;           //0xc
+    ULONG FastHypercallOutputAvailable : 1;                                   //0xc
+    ULONG SvmFeaturesAvailable : 1;                                           //0xc
+    ULONG SintPollingModeAvailable : 1;                                       //0xc
+    ULONG HypercallMsrLockAvailable : 1;                                      //0xc
+    ULONG DirectSyntheticTimers : 1;                                          //0xc
+    ULONG RegisterPatAvailable : 1;                                           //0xc
+    ULONG RegisterBndcfgsAvailable : 1;                                       //0xc
+    ULONG WatchdogTimerAvailable : 1;                                         //0xc
+    ULONG SyntheticTimeUnhaltedTimerAvailable : 1;                            //0xc
+    ULONG DeviceDomainsAvailable : 1;                                         //0xc
+    ULONG S1DeviceDomainsAvailable : 1;                                       //0xc
+    ULONG LbrAvailable : 1;                                                   //0xc
+    ULONG IptAvailable : 1;                                                   //0xc
+    ULONG CrossVtlFlushAvailable : 1;                                         //0xc
+    ULONG IdleSpecCtrlAvailable : 1;                                          //0xc
+    ULONG Reserved1 : 2;                                                      //0xc
+};
+
+enum _VM_EXIT_REASON
+{
+    EXIT_REASON_EXCEPTION_NMI = 0,    // Exception or non-maskable interrupt (NMI).
+    EXIT_REASON_EXTERNAL_INTERRUPT = 1,    // External interrupt.
+    EXIT_REASON_TRIPLE_FAULT = 2,    // Triple fault.
+    EXIT_REASON_INIT = 3,    // INIT signal.
+    EXIT_REASON_SIPI = 4,    // Start-up IPI (SIPI).
+    EXIT_REASON_IO_SMI = 5,    // I/O system-management interrupt (SMI).
+    EXIT_REASON_OTHER_SMI = 6,    // Other SMI.
+    EXIT_REASON_PENDING_INTERRUPT = 7,    // Interrupt window exiting.
+    EXIT_REASON_NMI_WINDOW = 8,    // NMI window exiting.
+    EXIT_REASON_TASK_SWITCH = 9,    // Task switch.
+    EXIT_REASON_CPUID = 10,   // Guest software attempted to execute CPUID.
+    EXIT_REASON_GETSEC = 11,   // Guest software attempted to execute GETSEC.
+    EXIT_REASON_HLT = 12,   // Guest software attempted to execute HLT.
+    EXIT_REASON_INVD = 13,   // Guest software attempted to execute INVD.
+    EXIT_REASON_INVLPG = 14,   // Guest software attempted to execute INVLPG.
+    EXIT_REASON_RDPMC = 15,   // Guest software attempted to execute RDPMC.
+    EXIT_REASON_RDTSC = 16,   // Guest software attempted to execute RDTSC.
+    EXIT_REASON_RSM = 17,   // Guest software attempted to execute RSM in SMM.
+    EXIT_REASON_VMCALL = 18,   // Guest software executed VMCALL.
+    EXIT_REASON_VMCLEAR = 19,   // Guest software executed VMCLEAR.
+    EXIT_REASON_VMLAUNCH = 20,   // Guest software executed VMLAUNCH.
+    EXIT_REASON_VMPTRLD = 21,   // Guest software executed VMPTRLD.
+    EXIT_REASON_VMPTRST = 22,   // Guest software executed VMPTRST.
+    EXIT_REASON_VMREAD = 23,   // Guest software executed VMREAD.
+    EXIT_REASON_VMRESUME = 24,   // Guest software executed VMRESUME.
+    EXIT_REASON_VMWRITE = 25,   // Guest software executed VMWRITE.
+    EXIT_REASON_VMXOFF = 26,   // Guest software executed VMXOFF.
+    EXIT_REASON_VMXON = 27,   // Guest software executed VMXON.
+    EXIT_REASON_CR_ACCESS = 28,   // Control-register accesses.
+    EXIT_REASON_DR_ACCESS = 29,   // Debug-register accesses.
+    EXIT_REASON_IO_INSTRUCTION = 30,   // I/O instruction.
+    EXIT_REASON_MSR_READ = 31,   // RDMSR. Guest software attempted to execute RDMSR.
+    EXIT_REASON_MSR_WRITE = 32,   // WRMSR. Guest software attempted to execute WRMSR.
+    EXIT_REASON_INVALID_GUEST_STATE = 33,   // VM-entry failure due to invalid guest state.
+    EXIT_REASON_MSR_LOADING = 34,   // VM-entry failure due to MSR loading.
+    EXIT_REASON_RESERVED_35 = 35,   // Reserved
+    EXIT_REASON_MWAIT_INSTRUCTION = 36,   // Guest software executed MWAIT.
+    EXIT_REASOM_MTF = 37,   // VM-exit due to monitor trap flag.
+    EXIT_REASON_RESERVED_38 = 38,   // Reserved
+    EXIT_REASON_MONITOR_INSTRUCTION = 39,   // Guest software attempted to execute MONITOR.
+    EXIT_REASON_PAUSE_INSTRUCTION = 40,   // Guest software attempted to execute PAUSE.
+    EXIT_REASON_MACHINE_CHECK = 41,   // VM-entry failure due to machine-check.
+    EXIT_REASON_RESERVED_42 = 42,   // Reserved
+    EXIT_REASON_TPR_BELOW_THRESHOLD = 43,   // TPR below threshold. Guest software executed MOV to CR8.
+    EXIT_REASON_APIC_ACCESS = 44,   // APIC access. Guest software attempted to access memory at a physical address on the APIC-access page.
+    EXIT_REASON_VIRTUALIZED_EIO = 45,   // EOI virtualization was performed for a virtual interrupt whose vector indexed a bit set in the EOIexit bitmap
+    EXIT_REASON_XDTR_ACCESS = 46,   // Guest software attempted to execute LGDT, LIDT, SGDT, or SIDT.
+    EXIT_REASON_TR_ACCESS = 47,   // Guest software attempted to execute LLDT, LTR, SLDT, or STR.
+    EXIT_REASON_EPT_VIOLATION = 48,   // An attempt to access memory with a guest-physical address was disallowed by the configuration of the EPT paging structures.
+    EXIT_REASON_EPT_MISCONFIG = 49,   // An attempt to access memory with a guest-physical address encountered a misconfigured EPT paging-structure entry.
+    EXIT_REASON_INVEPT = 50,   // Guest software attempted to execute INVEPT.
+    EXIT_REASON_RDTSCP = 51,   // Guest software attempted to execute RDTSCP.
+    EXIT_REASON_PREEMPT_TIMER = 52,   // VMX-preemption timer expired. The preemption timer counted down to zero.
+    EXIT_REASON_INVVPID = 53,   // Guest software attempted to execute INVVPID.
+    EXIT_REASON_WBINVD = 54,   // Guest software attempted to execute WBINVD
+    EXIT_REASON_XSETBV = 55,   // Guest software attempted to execute XSETBV.
+    EXIT_REASON_APIC_WRITE = 56,   // Guest completed write to virtual-APIC.
+    EXIT_REASON_RDRAND = 57,   // Guest software attempted to execute RDRAND.
+    EXIT_REASON_INVPCID = 58,   // Guest software attempted to execute INVPCID.
+    EXIT_REASON_VMFUNC = 59,   // Guest software attempted to execute VMFUNC.
+    EXIT_REASON_RESERVED_60 = 60,   // Reserved
+    EXIT_REASON_RDSEED = 61,   // Guest software attempted to executed RDSEED and exiting was enabled.
+    EXIT_REASON_RESERVED_62 = 62,   // Reserved
+    EXIT_REASON_XSAVES = 63,   // Guest software attempted to executed XSAVES and exiting was enabled.
+    EXIT_REASON_XRSTORS = 64,   // Guest software attempted to executed XRSTORS and exiting was enabled.
+
+    VMX_MAX_GUEST_VMEXIT = 65
+};
+
 
 //0x4e0 bytes (sizeof)
 struct _ETHREAD

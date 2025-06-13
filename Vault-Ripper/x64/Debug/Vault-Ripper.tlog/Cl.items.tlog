@@ -1,4 +1,5 @@
 D:\Projects\Vault-Ripper\Vault-Ripper\Vault-Ripper\av.cpp;D:\Projects\Vault-Ripper\Vault-Ripper\Vault-Ripper\x64\Debug\av.obj
+D:\Projects\Vault-Ripper\Vault-Ripper\Vault-Ripper\device.cpp;D:\Projects\Vault-Ripper\Vault-Ripper\Vault-Ripper\x64\Debug\device.obj
 D:\Projects\Vault-Ripper\Vault-Ripper\Vault-Ripper\misc.cpp;D:\Projects\Vault-Ripper\Vault-Ripper\Vault-Ripper\x64\Debug\misc.obj
 D:\Projects\Vault-Ripper\Vault-Ripper\Vault-Ripper\symlink.cpp;D:\Projects\Vault-Ripper\Vault-Ripper\Vault-Ripper\x64\Debug\symlink.obj
 D:\Projects\Vault-Ripper\Vault-Ripper\Vault-Ripper\dir.cpp;D:\Projects\Vault-Ripper\Vault-Ripper\Vault-Ripper\x64\Debug\dir.obj
@@ -10,3 +11,4 @@ D:\Projects\Vault-Ripper\Vault-Ripper\Vault-Ripper\hooks.cpp;D:\Projects\Vault-R
 D:\Projects\Vault-Ripper\Vault-Ripper\Vault-Ripper\modules.cpp;D:\Projects\Vault-Ripper\Vault-Ripper\Vault-Ripper\x64\Debug\modules.obj
 D:\Projects\Vault-Ripper\Vault-Ripper\Vault-Ripper\process.cpp;D:\Projects\Vault-Ripper\Vault-Ripper\Vault-Ripper\x64\Debug\process.obj
 D:\Projects\Vault-Ripper\Vault-Ripper\Vault-Ripper\thread.cpp;D:\Projects\Vault-Ripper\Vault-Ripper\Vault-Ripper\x64\Debug\thread.obj
+D:\Projects\Vault-Ripper\Vault-Ripper\Vault-Ripper\vm_handler.cpp;D:\Projects\Vault-Ripper\Vault-Ripper\Vault-Ripper\x64\Debug\vm_handler.obj

