@@ -146,6 +146,14 @@ This project is provided strictly for **educational and research purposes**.
 Unauthorized use, malicious deployment, or evasion of lawful protections is **strictly prohibited**.  
 The author assumes **no liability** for misuse or illegal application of the contents herein.
 
----
+---🧩References
+https://revers.engineering/
+https://www.vergiliusproject.com/
+https://v1k1ngfr.github.io/
+https://www.powerofcommunity.net/poc2012/mj0011.pdf
+https://community.osr.com/
+http://www.rohitab.com/discuss/tags/forums/DKOM/
+https://www.unknowncheats.me/forum/general-programming-and-reversing/235220-load-unsigned-drivers.html
+
 
 ## 👤 Author Notes
