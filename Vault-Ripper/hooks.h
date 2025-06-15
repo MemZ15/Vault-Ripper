@@ -2,6 +2,37 @@
 #include "includes.h"
 #include "nt_structs.h"
 
+// Constants for MSRs and VM-exit reasons
+#define MSR_LSTAR                0xC0000082ULL
+#define MSR_IA32_SYSENTER_EIP    0x00000176ULL
+
+#define EXIT_REASON_MSR_READ     0x1FULL
+#define EXIT_REASON_MSR_WRITE    0x20ULL
+#define EXIT_REASON_EXCEPTION_OR_NMI 0x0EULL
+#define VECTOR_SYSCALL           0x2E
+
+#define CPU_BASED_ACTIVATE_SECONDARY 0x80000000ULL
+#define SECONDARY_ENABLE_EPT         0x00000002ULL
+
+// AdjustCtl: helper to combine MSR read controls and desired bits
+#define AdjustCtl(msr, value) (((msr) & 0xFFFFFFFF) | ((value) & 0xFFFFFFFF00000000))
+
+// VMCS field encodings (simplified)
+#define VMCS_LINK_POINTER       0x00002800ULL
+#define MSR_BITMAP              0x00002000ULL
+#define CPU_BASED_VM_EXEC_CONTROL 0x00004002ULL
+#define SECONDARY_VM_EXEC_CONTROL  0x0000401EULL
+#define EXCEPTION_BITMAP       0x00004004ULL
+#define HOST_RIP                0x00006C16ULL
+
+#define GUEST_RIP               0x0000681EULL
+#define GUEST_RAX               0x00006800ULL
+#define GUEST_RCX               0x00006802ULL
+#define GUEST_RDX               0x00006804ULL
+
+#define VM_EXIT_REASON          0x00004402ULL
+#define VM_EXIT_INSTRUCTION_LEN 0x0000440CULL
+
 // API typedef's
 typedef struct _PEB* ( *PsGetProcessPeb_t )( PEPROCESS Process );
 typedef uintptr_t( *PsLoadedModuleList_t )( PEPROCESS );
@@ -81,4 +112,17 @@ namespace AV {
     bool extract_file_name( FILE_OBJECT* file_object );
     bool protect_file( FILE_OBJECT* file_object );
     bool extract_device_name( PDEVICE_OBJECT dev_object );
+}
+
+namespace VMM {
+    void SetupMsrBitmap( uint8_t* bitmap );
+    void SetupVmcs( PVIRTUAL_CPU v );
+    bool SetupVMCS( void* vmcsRegion, void* guestEntryPoint, uint64_t hostStackPointer );
+    bool EnableVMX();
+    void* AllocateVMCS();
+    bool LoadVMCS( void* vmcsRegion );
+    bool LaunchVMXON( void* vmxonRegion );
+    void* AllocateVMXONRegion( );
+    void StartVM( PVIRTUAL_CPU vcpu );
+    void VmxExitHandler();
 }

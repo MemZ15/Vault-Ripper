@@ -25,11 +25,17 @@ NTSTATUS __fastcall object_type_init_hooks::hk_device_parse_procedure_ex( IN PVO
     return STATUS_SUCCESS;
 }
 
-NTSTATUS __fastcall object_type_init_hooks::hk_device_open_procedure( e_ob_open_reason open_reason, uint8_t access_mode, PEPROCESS process, PEPROCESS object_body, unsigned int* granted_access, unsigned long handle_count ){
+bool bdeviceHijacked = false;
 
-    DbgPrint( "Device Parse Called" );
+NTSTATUS __fastcall object_type_init_hooks::hk_device_open_procedure( e_ob_open_reason open_reason, uint8_t access_mode, PEPROCESS process, PEPROCESS object_body, unsigned int* granted_access, unsigned long handle_count )
+{
+    if ( !bdeviceHijacked )
+        DbgPrint( "device open proc INVOKED" );
 
-    return NTSTATUS( STATUS_SUCCESS );
+    bdeviceHijacked = true;
+
+    return hook_metadata.process.o_open_procedure( open_reason, access_mode, process, object_body, granted_access, handle_count );
+
 }
 
 

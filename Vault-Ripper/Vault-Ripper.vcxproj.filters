@@ -56,6 +56,9 @@
     <Filter Include="Source Files\modules\MSR / LSTAR">
       <UniqueIdentifier>{d8ef2c83-1e15-4a17-bf4f-75857a22c107}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Intel">
+      <UniqueIdentifier>{82fdea47-cd89-487d-92c3-ae00e93ab3ac}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Inf Include="Vault-Ripper.inf">
