@@ -48,7 +48,6 @@ extern "C" NTSTATUS DriverEntry() {
 
 		// Install hooks
 		manager.HookObjects( 1 );
-		VMM::EnableVMX();
 		
 		LARGE_INTEGER delay;
 		delay.QuadPart = -10LL * 1000 * 1000 * 10; // 10 seconds
