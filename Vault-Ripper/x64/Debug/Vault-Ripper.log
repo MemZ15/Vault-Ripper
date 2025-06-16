@@ -1,11 +1,7 @@
 ﻿  Building 'Vault-Ripper' with toolset 'WindowsKernelModeDriver10.0' and the 'Universal' target platform.
   Stamping x64\Debug\Vault-Ripper.inf
-  Stamping [Version] section with DriverVer=06/15/2025,18.57.26.443
-  entry.cpp
+  Stamping [Version] section with DriverVer=06/15/2025,21.24.33.25
   Vault-Ripper.vcxproj -> D:\Projects\Vault-Ripper\Vault-Ripper\x64\Debug\Vault-Ripper.sys
-  Done Adding Additional Store
-  Successfully signed: D:\Projects\Vault-Ripper\Vault-Ripper\x64\Debug\Vault-Ripper.sys
-  
   Driver is 'Universal'.
   .........................
   Signability test complete.
