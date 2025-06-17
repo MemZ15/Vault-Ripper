@@ -102,7 +102,7 @@ bool mngr::HookManager::HookObjects( bool install ) {
 
         // Process, Thread, Symlink, Directory
         switch ( hooks[i].index ) {
-            case 3: case 4: case 7: case 8: case 33: {
+            case 3: case 4: case 7: case 8: {
                 open_procedure_ty* open_ptr = &obj->TypeInfo.open_procedure;
                 hook_unhook( open_ptr, hooks[i].original_fn );
                 break;

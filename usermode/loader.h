@@ -26,6 +26,14 @@ namespace vul {
 
 	UINT64 GetEProcessPhysicalAddress( HANDLE hDevice, int targetPid );
 
+	PVOID MapPhysicalMemory( HANDLE hDevice, uint64_t physAddr, uint32_t size );
+
+	void UnmapPhysicalMemory( HANDLE hDevice, PVOID mappedAddr );
+
+	bool ReadKernelMemory( HANDLE hDevice, uint64_t physAddr, void* buffer, size_t size );
+
+	bool WriteKernelMemory( HANDLE hDevice, uint64_t physAddr, const void* data, size_t size );
+
 }
 
 
