@@ -129,7 +129,7 @@ Planned support for bypassing traditional NT/Zw layers:
 
 ## 🖼️ Architecture Overview
 
-![Driver Object Cloaking Diagram](https://cdn.discordapp.com/attachments/1217690516804866172/1382611615052206120/image.png?ex=684bc8e8&is=684a7768&hm=3c0c579db1d2b009fe497b1ae2b58c289ebf6e1a3d1b2c8a22f3396c2fb41a1f&)
+![Driver Object Cloaking Diagram](https://cdn.discordapp.com/attachments/1217690516804866172/1384817034940125204/image.png?ex=6853cedd&is=68527d5d&hm=b55f2098adf966687b3c7c61cb3888c071c13d2e73450b996efb4c0f0561277b&)
 
 ---
 
