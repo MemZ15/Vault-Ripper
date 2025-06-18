@@ -1,3 +1,4 @@
 .vs/
+/x64/Debug
 {Vault-Ripper}/.vs
-{Vault-Ripper}/x64
+{Vault-Ripper}/x64/Debug
