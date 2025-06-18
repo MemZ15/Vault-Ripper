@@ -1,9 +1,7 @@
 # 🧬 Kernel Cloaking & Access Interception Driver
 
-A Windows **kernel-mode cloaking driver** engineered for stealth, control, and forensic resilience.  
-It intercepts and sanitizes access at the object level using runtime API resolution, salted-hash signature filtering, and direct metadata manipulation to selectively block or spoof visibility to protected drivers, files, threads, and processes.
-
-Built for AV-evasion and forensic resistance, the driver avoids static imports, hooks deep kernel internals, and resolves critical functions dynamically.
+A stealth-focused **Windows kernel-mode driver** that filters or spoofs access to protected drivers, threads, processes, and files.  
+Built for evasion, forensic resilience, and deep system control — with no static imports, dynamic salted-hash resolution, and runtime object manipulation.
 
 ---
 
@@ -11,125 +9,120 @@ Built for AV-evasion and forensic resistance, the driver avoids static imports, 
 
 ### 🧭 IDT-Based Kernel Base Discovery
 
-- Locates `ntoskrnl.exe` base using the Interrupt Descriptor Table (IDT)
-- Avoids flagged techniques like `PsLoadedModuleList` traversal
+- Locates `ntoskrnl.exe` using the Interrupt Descriptor Table (IDT)
+- Avoids detection-prone methods like `PsLoadedModuleList`
 
-### 🧠 Runtime Function Table
+### 🧠 Runtime Function Resolution (No Static Imports)
 
-- Dynamically resolves internal routines (e.g., `ObReferenceObjectByName`, `IoGetCurrentProcess`)
-- All resolution is done via salted-hash of export names — no static imports
-
-### 🧬 Salted Hash-Based Access Filtering
-
-Intercepts and conditionally blocks:
-
-- Process  
-- Thread  
-- File  
-- Driver  
-- Directory  
-- Symbolic Link  
-
-Hash checks are performed in real time using a case-insensitive, salted algorithm.  
-Comparison is done against a precomputed whitelist or blacklist.
+- All kernel functions resolved via salted, case-insensitive hashes at runtime
+- No suspicious IAT entries
+- Functions like:
+  - `ObReferenceObjectByName`
+  - `IoGetCurrentProcess`
+  - `ZwQuerySystemInformation`
 
 ---
 
-## 🛡️ Inline Hook & Syscall Integrity Checks
+## 🧬 Salted Hash-Based Filtering
 
-Performs runtime inspection of syscall entrypoint to detect hijacked handlers.
+Intercepts access to:
 
-### ✔ Technique
+- Processes  
+- Threads  
+- Drivers  
+- Files  
+- Symbolic links  
+- Object directories  
 
-- Reads `MSR_LSTAR` to obtain expected `syscall` handler
-- Leaks actual handler pointer via indirect method
-- Compares leaked address with expected value
+**How filtering works:**
 
-### 🔬 Opcode-Based Hook Detection
-
-Scans first bytes of handler for common hook patterns:
-
-- `0xE9` → `JMP rel32`
-- `0xCC` → `INT3`
-- `0x48 0xB8` → `mov rax, imm64`
-
-Early termination is triggered if hooks are detected.
+1. Extracts basename from object (e.g., `bad.exe`)
+2. Lowercases and salts it
+3. Hashes with a custom case-insensitive algorithm
+4. Compares to in-memory blacklist or whitelist
 
 ---
 
 ## 🔧 Deep Object Type Hooking
 
-Hooks specific routines within `OBJECT_TYPE_INITIALIZER` to filter object access.
+Hooks inside `OBJECT_TYPE_INITIALIZER` for real-time filtering.
 
-| Object Type                | Intercepted Routine(s)           | Purpose                                      |
-|----------------------------|---------------------------------|----------------------------------------------|
-| `PsProcessType`            | `OpenProcedure`                 | Filter process handle requests               |
-| `PsThreadType`             | `OpenProcedure`                 | Intercept thread access                       |
-| `IoFileObjectType`         | `OpenProcedure`                 | Block access to cloaked file paths           |
-| `IoDriverObjectType`       | `OpenProcedure`, `ParseProcedureEx` | Obfuscate presence of protected drivers |
-| `IoDeviceObjectType`       | `OpenProcedure`                 | Hide device interfaces tied to drivers       |
-| `ObDirectoryObjectType`    | `OpenProcedure`                 | Filter directory enumeration                  |
-| `ObSymbolicLinkObjectType` | `OpenProcedure`                 | Block symlink traversal                       |
+| Object Type                | Hooked Routines                          | Purpose                          |
+|----------------------------|------------------------------------------|----------------------------------|
+| `PsProcessType`            | `OpenProcedure`                          | Block process handle access      |
+| `PsThreadType`             | `OpenProcedure`                          | Block thread handle access       |
+| `IoFileObjectType`         | `OpenProcedure`                          | Cloak or block file access       |
+| `IoDriverObjectType`       | `OpenProcedure`, `ParseProcedureEx`      | Hide or spoof drivers            |
+| `IoDeviceObjectType`       | `OpenProcedure`                          | Hide device interfaces           |
+| `ObDirectoryObjectType`    | `OpenProcedure`                          | Block access to directory paths  |
+| `ObSymbolicLinkObjectType` | `OpenProcedure`                          | Block symbolic link traversal    |
 
-Each hook inspects access context and can return clean failure codes like `STATUS_OBJECT_NAME_NOT_FOUND`.
-
----
-
-## 📦 Driver Object Cloaking
-
-Fabricates decoy `DRIVER_OBJECT`s by cloning trusted drivers like `\Driver\spaceport`.
-
-- Copies dispatch table, driver name, and type metadata  
-- Returns spoofed structure during queries or IRP dispatch  
-- Evades detection during routine inspections
+Returns clean codes like `STATUS_OBJECT_NAME_NOT_FOUND`.
 
 ---
 
-## 🧮 Salted Hash Filtering Logic
+## 🛡️ Inline Hook & Syscall Integrity Check
 
-1. Extract base name (e.g., `\Device\HarddiskVolumeX\Windows\System32\bad.exe` → `bad.exe`)  
-2. Lowercase and salt  
-3. Hash with custom case-insensitive function  
-4. Compare against in-memory whitelist or blacklist  
+Performs runtime checks to detect syscall entrypoint hooks.
 
-Filtering is fast, opaque, and avoids storing raw names in memory.
+**Detection logic:**
+
+- Reads `MSR_LSTAR` to get expected `syscall` handler
+- Compares leaked vs expected pointer
+- Checks first few opcodes for:
+  - `0xE9` (JMP rel32)
+  - `0xCC` (INT3)
+  - `0x48 0xB8` (mov rax, imm64)
+
+Aborts if tampering is detected.
 
 ---
 
 ## 🧩 ParseProcedureEx Interception
 
-Intercepts deep object resolution via `IoDriverObjectType::ParseProcedureEx`.
+Intercepts `IoDriverObjectType::ParseProcedureEx`.
 
-### Context Inspected
+**Inspects:**
+- `ObjectName`, `RemainingName`
+- `AccessState`, `DesiredAccess`
 
-- `ObjectName`, `RemainingName`  
-- `AccessState`, `DesiredAccess`, `AuditInfo`  
-
-### Filtering Strategy
-
-- Hash driver name from parse context  
-- Block access cleanly without crashing  
-- Silently filter blacklisted drivers from resolution path
+**Then:**
+- Hashes basename
+- Filters if blacklisted
+- Returns clean failure if blocked
 
 ---
 
-## 🔬 Metadata Cloaking & Restoration
+## 🧮 Metadata Cloaking
 
-- Allocates full clone of target object (e.g., `DRIVER_OBJECT`)  
-- Copies internal metadata, dispatch routines, and list entries  
-- Temporarily replaces references during inspection  
-- Restores original object with integrity validation  
-
-Ensures stealth under AV, EDR, or forensic tools that query kernel objects directly.
+- Allocates and prepares a shadow copy of kernel objects
+- Temporarily replaces references for duration of inspection
+- Restores originals post-query
+- Leaves no trace after restoration
 
 ---
+
+## 🧪 New: User-Mode Loader via Vulnerable Driver
+
+Bypasses DSE and loads unsigned kernel drivers at runtime.
+
+**Flow:**
+
+1. Load vulnerable signed driver (e.g., `gdrv.sys`)
+2. Overwrite `ci!CiValidateImageHeader` callback
+3. Load unsigned cloaking driver
+4. Restore original callback
+
+**Benefits:**
+
+- No bootkits
+- No test signing
+- No PatchGuard tampering
+- No persistent system changes
 
 ## 🧪 Alternate Syscall Support (WIP)
 
 Planned support for bypassing traditional NT/Zw layers:
-
-- SSDT remapping and low-level syscall variants  
-- Wrapping of `syscall` instructions via internal redirection  
 - UM-kernel syscall bridges with selective filtering
 
 ---
@@ -157,3 +150,4 @@ https://www.unknowncheats.me/forum/general-programming-and-reversing/235220-load
 
 
 ## 👤 Author Notes
+WIP
