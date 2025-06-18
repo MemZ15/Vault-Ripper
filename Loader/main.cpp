@@ -13,3 +13,9 @@ int main() {
 	system( "pause" );
 	return 0;
 }
+
+// TODO
+/*
+ -> Dynamic file locator so they don have to be on the desktop
+
+*/
