@@ -15,11 +15,9 @@
 #define RtlProcessHeap()		(NtCurrentPeb()->ProcessHeap)
 
 typedef struct _PEB_CUSTOM {
-	BYTE Reserved1[0x30];     // Offset to ProcessHeap (0x30 on x64)
-	PVOID ProcessHeap;        // Offset 0x30
+	BYTE Reserved1[0x30];   
+	PVOID ProcessHeap;        
 } PEB_CUSTOM, * PPEB_CUSTOM;
-
-
 
 
 #ifndef RTL_CONSTANT_OBJECT_ATTRIBUTES
@@ -61,6 +59,7 @@ extern "C" { NTSYSAPI NTSTATUS NTAPI RtlAdjustPrivilege( ULONG Privilege, BOOLEA
 
 extern "C" { NTSYSAPI NTSTATUS NTAPI RtlGetFullPathName_UEx( _In_ PWSTR FileName, _In_ ULONG BufferLength, _Out_writes_bytes_( BufferLength ) PWSTR Buffer, _Out_opt_ PWSTR* FilePart, _Out_opt_ RTL_PATH_TYPE* InputPathType ); }
 
+extern "C" { NTSYSAPI NTSTATUS NTAPI RtlGetFullPathName_UEx( _In_ PWSTR FileName, _In_ ULONG BufferLength, _Out_writes_bytes_( BufferLength ) PWSTR Buffer, _Out_opt_ PWSTR* FilePart, _Out_opt_ RTL_PATH_TYPE* InputPathType ); }
 
 
 typedef struct _RTL_PROCESS_MODULE_INFORMATION

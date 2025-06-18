@@ -109,7 +109,6 @@ bool modules::check_env() {
 
     }
 
-    Logger::Print( Logger::Level::Info, "[+] No hypervisor detected." );
     return true;
 }
     

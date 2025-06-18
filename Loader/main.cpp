@@ -6,7 +6,7 @@ wchar_t Driver_Name[] = L"Vault-Ripper.sys";
 int main() {
 	int option;
 
-	std::wcout << ( "[*] DSE Loader Entry Called!\n" );
+	std::wcout << ( "[+] DSE Loader Entry Called!\n" );
 	NTSTATUS stat = vuln::WindLoadDriver( LoaderName, Driver_Name, 0 );
 
 

