@@ -1,6 +1,8 @@
 #include "helpers.h"
 #include "modules.h"
 
+/* https://learn.microsoft.com/en-us/cpp/intrinsics/sidt?view=msvc-170 */
+/*https://learn.microsoft.com/en-us/cpp/intrinsics/disable?view=msvc-170  */
 
 uintptr_t helpers::store_idr( IDTR* idtr ) {
 	_disable();

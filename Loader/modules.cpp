@@ -4,10 +4,10 @@
 
 NTSTATUS modules::FindKernelModule( PCCH ModuleName, PULONG_PTR ModuleBase )
 {
-    *ModuleBase = { 0 };
+    *ModuleBase = { NULL };
 
     ULONG size{ 0 };
-    NTSTATUS stat;
+    NTSTATUS stat{ !STATUS_SUCCESS };
 
     if ( ( stat = NtQuerySystemInformation( ( SYSTEM_INFORMATION_CLASS )11, nullptr, 0, &size ) ) != STATUS_INFO_LENGTH_MISMATCH ) return 0;
 
@@ -35,9 +35,9 @@ Exit:
 
 ULONG_PTR modules::GetKernelModuleAddress( const char* name ) {
 
-    DWORD size = 0;
-    void* buffer = NULL;
-    PRTL_PROCESS_MODULES modules;
+    DWORD size = { 0 };
+    void* buffer = { NULL };
+    PRTL_PROCESS_MODULES modules{};
 
     NTSTATUS status = NtQuerySystemInformation( ( SYSTEM_INFORMATION_CLASS )11, buffer, size, &size );
 
@@ -87,7 +87,7 @@ seCiCallbacks_swap modules::get_CIValidate_ImageHeaderEntry() {
     
     unsigned char pattern[] = { 0xff, 0x48, 0x8b, 0xd3, 0x4c, 0x8d, 0x05 };
 
-    DWORD64 seCiCallbacksInstr = helpers::FindInstructionWithPattern( uNtAddr, modinfo.SizeOfImage, pattern, sizeof( pattern ), 4 );
+    DWORD64 seCiCallbacksInstr = helpers::find_pattern( uNtAddr, modinfo.SizeOfImage, pattern, sizeof( pattern ), 4 );
    
     INT32 seCiCallbacksLeaOffset = *( INT32* )( seCiCallbacksInstr + 3 );
 
@@ -104,7 +104,7 @@ seCiCallbacks_swap modules::get_CIValidate_ImageHeaderEntry() {
 
     DWORD64 zwFlushInstructionCache = ( DWORD64 )helpers::GetProcAddress( usermode_load_va, L"ZwFlushInstructionCache" ) - uNtAddr + mod_base;
 
-    DWORD64 ciValidateImageHeaderEntry = kernelAddress + 0x20; // Kernel Base + 0x20 = ImageHeaderEntry mov r8
+    DWORD64 ciValidateImageHeaderEntry = kernelAddress + 0x20; // Offset 0x20: Entry point of CiValidateImageHeader within ci.dll (used by nt!SeValidateImageHeader for signature checks)
 
     return seCiCallbacks_swap{ ciValidateImageHeaderEntry, zwFlushInstructionCache };
 }
@@ -131,7 +131,7 @@ NTSTATUS modules::CreateDriverService( PWCHAR ServiceName, PWCHAR FileName )
     
     if ( !NT_SUCCESS( Status ) )    return Status;
 
-    WCHAR NtPath[MAX_PATH];
+    WCHAR NtPath[MAX_PATH]{};
     ULONG ServiceType = SERVICE_KERNEL_DRIVER;
 
     Status = RtlWriteRegistryValue( RTL_REGISTRY_ABSOLUTE, ServiceName, L"ImagePath", REG_SZ, NtPath, helpers::ConvertToNtPath( NtPath, FileName ) );
@@ -165,9 +165,6 @@ int helpers::ConvertToNtPath( PWCHAR Dst, PWCHAR Src ) {
     
     return static_cast< int >( ( totalLen + 1 ) * sizeof( wchar_t ) ); 
 }
-
-
-
 
 
 NTSTATUS modules::LoadDriver( PWCHAR ServiceName )

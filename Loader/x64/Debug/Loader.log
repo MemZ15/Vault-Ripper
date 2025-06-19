@@ -1,2 +1,6 @@
-﻿  modules.cpp
+﻿  exploit.cpp
+  helpers.cpp
+  main.cpp
+  modules.cpp
+  Generating Code...
   Loader.vcxproj -> D:\Projects\Vault-Ripper\Vault-Ripper\x64\Debug\Loader.exe

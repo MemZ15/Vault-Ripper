@@ -12,8 +12,6 @@ NTSTATUS __fastcall object_type_init_hooks::hk_driver_parse_procedure_ex( void* 
     UNREFERENCED_PARAMETER( Object );
     UNREFERENCED_PARAMETER( RemainingName );
 
-
-
     auto* obj = static_cast< PDRIVER_OBJECT >( ObjectType );
 
     if ( AV::extract_driver_name( obj ) ) {
@@ -23,9 +21,6 @@ NTSTATUS __fastcall object_type_init_hooks::hk_driver_parse_procedure_ex( void* 
     return STATUS_SUCCESS;
 
 }
-
-
-
 
 
 

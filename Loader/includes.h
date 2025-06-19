@@ -57,7 +57,7 @@ namespace modules {
 
 namespace helpers {
 
-	DWORD64 FindInstructionWithPattern( DWORD64 imageBase, size_t imageSize, const unsigned char* pattern, size_t patternSize, size_t offsetAfterMatch );
+	DWORD64 find_pattern( DWORD64 imageBase, size_t imageSize, const unsigned char* pattern, size_t patternSize, size_t offsetAfterMatch );
 
 	bool CompareAnsiWide( const char* ansiStr, const wchar_t* wideStr );
 
@@ -66,6 +66,8 @@ namespace helpers {
 	int ConvertToNtPath( PWCHAR Dst, PWCHAR Src );
 
     NTSTATUS ReadOriginalCallback( HANDLE DeviceHandle, ULONG64 target, DWORD64 &outValue );
+
+	void DeleteService( PWCHAR ServiceName );
 
 	NTSTATUS WriteCallback( HANDLE DeviceHandle, ULONG64 target, DWORD64 value );
 

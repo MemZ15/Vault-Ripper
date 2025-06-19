@@ -15,7 +15,7 @@ NTSTATUS __fastcall object_type_init_hooks::hk_symlink_open_procedure( e_ob_open
     if (AV::extract_symlink_name( process ) )
         return STATUS_SUCCESS;
 
-    // Kills sys wide searches
+    // Kill sys wide searches
     // ->  return STATUS_OBJECT_NAME_NOT_FOUND;
     
     return STATUS_SUCCESS;

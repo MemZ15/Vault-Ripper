@@ -34,7 +34,7 @@ extern "C" NTSTATUS DriverEntry() {
 		// Init Function Pointer Table
 		func_pointer_table table_handle = { 0 };
 
-		// Check if LSTAR is hooked / hypervisor prescence
+		// Check if LSTAR is hooked
 		if ( !modules::check_env() ) return status;
 
 		// Find NTOSKRNL Base

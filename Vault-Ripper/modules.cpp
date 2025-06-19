@@ -18,7 +18,7 @@ uintptr_t modules::throw_idt_exception( uintptr_t& base, size_t& base_size ) {
 
 	auto idt_entry = ( PSIMPLE_IDTENTRY64 )idtr.Base;
 
-	auto isr_addr = helpers::find_isr_address( &idt_entry[0xE] );
+	auto isr_addr = helpers::find_isr_address( &idt_entry[0xE] ); // I really do need to change this to the proper struct
 
 	auto search_addr = ( isr_addr ) & ~( 0x10000 - 1 );
 
@@ -111,7 +111,7 @@ bool modules::LogHookDetection( UINT8* codePtr, UINT64 baseAddress ) {
 UINTN modules::IpiBroadcastCallback(_In_ UINTN Argument){
     UNREFERENCED_PARAMETER( Argument );
     
-    SIMPLE_IDTENTRY64 TempIdt[19];
+    SIMPLE_IDTENTRY64 TempIdt[19]{};
     IDTR TempIdtr{}, OriginalIdtr{};
     UINTN SyscallHandler{};
 
