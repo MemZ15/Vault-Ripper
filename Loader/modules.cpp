@@ -115,7 +115,7 @@ NTSTATUS modules::OpenDeviceHandle( _Out_ PHANDLE DeviceHandle, _In_ BOOLEAN Pri
     OBJECT_ATTRIBUTES ObjectAttributes = RTL_CONSTANT_OBJECT_ATTRIBUTES( &devName, OBJ_CASE_INSENSITIVE );
     IO_STATUS_BLOCK IoStatusBlock{};
 
-    static const NTSTATUS stat = NtCreateFile( DeviceHandle, SYNCHRONIZE, &ObjectAttributes, &IoStatusBlock, nullptr, 
+    const NTSTATUS stat = NtCreateFile( DeviceHandle, SYNCHRONIZE, &ObjectAttributes, &IoStatusBlock, nullptr, 
         FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, FILE_OPEN, FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE, nullptr, 0 );
 
     if ( !NT_SUCCESS( stat ) && PrintErrors ) return stat;
