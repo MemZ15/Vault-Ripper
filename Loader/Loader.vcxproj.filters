@@ -16,22 +16,28 @@
     <Filter Include="Header Files\win_api">
       <UniqueIdentifier>{85c5e7a7-9f80-4fe8-9224-d23de8b47ac6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\bypass">
+    <Filter Include="Source Files\DSE bypass">
       <UniqueIdentifier>{ce477211-6940-4117-81f2-da312d5c973e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\helpers">
+      <UniqueIdentifier>{fe57b9d1-e940-41a4-a977-524d9ef00f44}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules">
+      <UniqueIdentifier>{8b9248a9-f2c1-48be-907f-27af1191c909}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="modules.cpp">
-      <Filter>Source Files\bypass</Filter>
+    <ClCompile Include="exploit.cpp">
+      <Filter>Source Files\DSE bypass</Filter>
     </ClCompile>
     <ClCompile Include="helpers.cpp">
-      <Filter>Source Files\bypass</Filter>
+      <Filter>Source Files\helpers</Filter>
     </ClCompile>
-    <ClCompile Include="exploit.cpp">
-      <Filter>Source Files\bypass</Filter>
+    <ClCompile Include="modules.cpp">
+      <Filter>Source Files\modules</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

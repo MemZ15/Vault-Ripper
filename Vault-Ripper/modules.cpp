@@ -79,35 +79,15 @@ bool modules::check_env() {
     if ( def != globals::global_sys_caller ) {
         // our found handler via CVE_2018_1017
         UINT8* first_bytes_hooked = reinterpret_cast< UINT8* >( globals::global_sys_caller );
+        
         // og handler
         UINT8* first_bytes_og_FN = reinterpret_cast< UINT8* >( def );
+        
         if ( modules::LogHookDetection( first_bytes_hooked, globals::global_sys_caller ) || modules::LogHookDetection( first_bytes_og_FN, def ) ) 
                 return false;
-
     }
     
     Logger::Print( Logger::Level::Info, "No patch detected — handlers are clean." );
-
-
-    __cpuid( cpuInfo, 1 );
-
-    // Hypervisor Present
-    if ( cpuInfo[2] & ( 1 << 31 ) ) {
-        __cpuid( cpuInfo, 0x40000000 );
-
-        char vendorId[13] = { 0 };
-        wchar_t vendorIdWide[13] = { 0 };
-        helpers::ansi_to_wide(vendorId, vendorIdWide, sizeof(vendorIdWide) / sizeof(wchar_t));
-
-        // 31st bit has the naming info 
-        // Avoid a read call - unnecesary, not prone to change
-        memcpy( &vendorId[0], &cpuInfo[1], 4 ); // EBX
-        memcpy( &vendorId[4], &cpuInfo[2], 4 ); // ECX
-        memcpy( &vendorId[8], &cpuInfo[3], 4 ); // EDX
-
-        Logger::Print( Logger::Level::Info, "[*] Hypervisor Vendor ID: %s", vendorId );
-
-    }
 
     return true;
 }
@@ -124,45 +104,6 @@ bool modules::LogHookDetection( UINT8* codePtr, UINT64 baseAddress ) {
             return codePtr[1] == 0xB8;
     default:
         return false;
-    }
-}
-
-
-VOID modules::VmmHandleMsrAccess(_In_ PVIRTUAL_CPU Vcpu, _In_ MsrAccessType accessType){
-    UINT64 value = 0;
-
-    switch ( accessType ) {
-    case MsrAccessType::Read:
-        if ( Vcpu->LStar == MSR_LSTAR ) {
-            // Return hooked syscall handler if active
-            value = globals::global_sys_caller != 0 ? globals::global_sys_caller : __readmsr( MSR_LSTAR );
-        }
-        else {
-            value = __readmsr( Vcpu->MsrIndex );
-        }
-        Vcpu->MsrValue = value;
-        break;
-
-    case MsrAccessType::Write:
-        value = Vcpu->MsrValue;
-
-        if ( Vcpu->MsrIndex == MSR_LSTAR ) {
-            // Allow write-through for now
-            __writemsr( MSR_LSTAR, value );
-
-            // If the guest wrote the original syscall handler back, set a flag to re-hook
-            if ( value == Vcpu->LStar ) {
-                Vcpu->NeedsSyscallRehook = true;
-            }
-            else {
-                // Hook is already written or being replaced with our custom handler
-                Vcpu->NeedsSyscallRehook = false;
-            }
-        }
-        else {
-            __writemsr( Vcpu->MsrIndex, value );
-        }
-        break;
     }
 }
 
