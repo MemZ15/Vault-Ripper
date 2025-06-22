@@ -5,28 +5,72 @@
 
 
 namespace object_type_init_hooks {
+    void __fastcall DumpProcedure( void* arg1, _OBJECT_DUMP_CONTROL* arg2 );
 
-	NTSTATUS __fastcall hk_process_open_procedure( e_ob_open_reason open_reason, uint8_t access_mode, PEPROCESS process, 
-		PEPROCESS object_body, unsigned int* granted_access, unsigned long handle_count );
+    void __fastcall CloseProcedure(
+        _EPROCESS* arg1,
+        void* arg2,
+        ULONGLONG arg3,
+        ULONGLONG arg4
+    );
 
-	NTSTATUS __fastcall hk_thread_open_procedure( e_ob_open_reason open_reason, uint8_t access_mode, PEPROCESS process, 
-		PEPROCESS object_body, unsigned int* granted_access, unsigned long handle_count );
+    void __fastcall DeleteProcedure( void* arg1 );
 
-	NTSTATUS __fastcall hk_driver_parse_procedure_ex( void* ObjectType, void* Object, UNICODE_STRING* ObjectName, UNICODE_STRING* RemainingName );
+    LONG __fastcall ParseProcedure(
+        void* arg1,
+        void* arg2,
+        _ACCESS_STATE* arg3,
+        CHAR arg4,
+        ULONG arg5,
+        _UNICODE_STRING* arg6,
+        _UNICODE_STRING* arg7,
+        void* arg8,
+        _SECURITY_QUALITY_OF_SERVICE* arg9,
+        void** arg10
+    );
 
-	NTSTATUS __fastcall hk_file_parse_procedure_ex( void* ObjectType, void* Object, UNICODE_STRING* Remaining_Path );
+    LONG __fastcall ParseProcedureEx(
+        void* arg1,
+        void* arg2,
+        _ACCESS_STATE* arg3,
+        CHAR arg4,
+        ULONG arg5,
+        _UNICODE_STRING* arg6,
+        _UNICODE_STRING* arg7,
+        void* arg8,
+        _SECURITY_QUALITY_OF_SERVICE* arg9,
+        _OB_EXTENDED_PARSE_PARAMETERS* arg10,
+        void** arg11
+    );
 
-	NTSTATUS __fastcall hk_directory_open_procedure( e_ob_open_reason open_reason, uint8_t access_mode, PEPROCESS process, 
-		PEPROCESS object_body, unsigned int* granted_access, unsigned long handle_count );
+    LONG __fastcall SecurityProcedure(
+        void* arg1,
+        _SECURITY_OPERATION_CODE arg2,
+        ULONG* arg3,
+        void* arg4,
+        ULONG* arg5,
+        void** arg6,
+        _POOL_TYPE arg7,
+        _GENERIC_MAPPING* arg8,
+        CHAR arg9
+    );
 
-	NTSTATUS __fastcall hk_symlink_open_procedure( e_ob_open_reason open_reason, uint8_t access_mode, PEPROCESS process, 
-		PEPROCESS object_body, unsigned int* granted_access, unsigned long handle_count );
-	
-	NTSTATUS __fastcall hk_device_parse_procedure_ex( IN PVOID ParseObject, IN PVOID ObjectType, IN OUT PACCESS_STATE AccessState, 
-		IN KPROCESSOR_MODE AccessMode, IN ULONG Attributes, IN OUT PUNICODE_STRING CompleteName, 
-			IN OUT PUNICODE_STRING RemainingName, IN OUT PVOID Context, 
-				IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL, OUT PVOID* Object );
+    LONG __fastcall QueryNameProcedure(
+        void* arg1,
+        UCHAR arg2,
+        _OBJECT_NAME_INFORMATION* arg3,
+        ULONG arg4,
+        ULONG* arg5,
+        CHAR arg6
+    );
 
-	NTSTATUS __fastcall hk_device_open_procedure( e_ob_open_reason open_reason, uint8_t access_mode, PEPROCESS process, 
-		PEPROCESS object_body, unsigned int* granted_access, unsigned long handle_count );
+    UCHAR __fastcall OkayToCloseProcedure(
+        _EPROCESS* arg1,
+        void* arg2,
+        void* arg3,
+        CHAR arg4
+    );
+
+    LONG __fastcall ProcessOpenProcedure( _OB_OPEN_REASON, KPROCESSOR_MODE, _EPROCESS*, _EPROCESS*, ULONG*, ULONG );
+    LONG __fastcall ThreadOpenProcedure( _OB_OPEN_REASON, KPROCESSOR_MODE, _EPROCESS*, _EPROCESS*, ULONG*, ULONG );
 }

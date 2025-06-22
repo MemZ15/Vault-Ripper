@@ -6,18 +6,12 @@
 ob_type_hook_pair thread;
 
 
-NTSTATUS __fastcall object_type_init_hooks::hk_thread_open_procedure( e_ob_open_reason open_reason, uint8_t access_mode, PEPROCESS process, PEPROCESS object_body, unsigned int* granted_access, unsigned long handle_count ) {
-    
-    UNREFERENCED_PARAMETER( open_reason ); UNREFERENCED_PARAMETER( access_mode );     UNREFERENCED_PARAMETER( granted_access );     UNREFERENCED_PARAMETER( handle_count );
-
-    if ( !open_reason || !process || !object_body )
-        return STATUS_SUCCESS;
-
-    auto thread = reinterpret_cast< _KTHREAD* >( object_body );
-
-    if ( AV::extract_thread_name( thread ) ) {
-        return STATUS_ACCESS_DISABLED_BY_POLICY_DEFAULT;
+LONG __fastcall object_type_init_hooks::ThreadOpenProcedure( _OB_OPEN_REASON arg1, KPROCESSOR_MODE arg2, _EPROCESS* arg3, _EPROCESS* arg4, ULONG* arg5, ULONG arg6 ) {
+    if ( hook_metadata.thread.o_open_procedure ) {
+        DbgPrint( "[THREAD] Returning to Handler" );
+        return hook_metadata.thread.o_open_procedure( arg1, arg2, arg3, arg4, arg5, arg6 );
     }
-        
-    return hook_metadata.thread.o_open_procedure( open_reason, access_mode, process, object_body, granted_access, handle_count );
+    DbgPrint( "Returning to NTSTATUS" );
+
+    return STATUS_SUCCESS;
 }

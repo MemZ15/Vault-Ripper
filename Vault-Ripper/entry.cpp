@@ -35,7 +35,7 @@ extern "C" NTSTATUS DriverEntry() {
 		func_pointer_table table_handle = { 0 };
 
 		// Check if LSTAR is hooked
-		if ( !modules::check_env() ) return status;
+		//if ( !modules::check_env() ) return status;
 
 		// Find NTOSKRNL Base
 		status = modules::throw_idt_exception( base, size );
@@ -43,10 +43,10 @@ extern "C" NTSTATUS DriverEntry() {
 		// Find and save pointer info for WIN-API functions
 		mngr::hook_win_API( base, size, table_handle );
 
-		// Create HookManager using the with index table address as constructor
-		mngr::HookManager manager( table_handle.ObTypeIndexTable );
+		//test::capture_initalizer_table( &base, size, table_handle, obj, 1 );
 
 		// Install hooks
+		mngr::HookManager manager{table_handle.ObTypeIndexTable};
 		manager.HookObjects( 1 );
 		
 		LARGE_INTEGER delay;
@@ -62,3 +62,5 @@ extern "C" NTSTATUS DriverEntry() {
 	return status;
 	
 }
+
+// TODO port to windows 11

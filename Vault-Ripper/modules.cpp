@@ -10,15 +10,15 @@ extern "C" UINTN CVE_2018_1017( VOID );
 extern "C" VOID FallbackHandler( VOID );
 extern "C" VOID PageFaultHookHandler( VOID );
 
-uintptr_t modules::throw_idt_exception( uintptr_t& base, size_t& base_size ) {
+uintptr_t modules::throw_idt_exception( uintptr_t &base, size_t& base_size ) {
 
 	IDTR idtr{};
 
-	helpers::store_idr( &idtr );
+    helpers::store_idr( &idtr );
 
-	auto idt_entry = ( PSIMPLE_IDTENTRY64 )idtr.Base;
+    auto idt_entry = ( PSIMPLE_IDTENTRY64 )idtr.Base;
 
-	auto isr_addr = helpers::find_isr_address( &idt_entry[0xE] ); // I really do need to change this to the proper struct
+    auto isr_addr = helpers::find_isr_address( &idt_entry[0xE] ); 
 
 	auto search_addr = ( isr_addr ) & ~( 0x10000 - 1 );
 
@@ -32,10 +32,10 @@ uintptr_t modules::traverse_export_list( UINT64 hash, uintptr_t base )
 {
     if ( !base ) return uintptr_t{ 0 };
 
-    PIMAGE_DOS_HEADER dosHeader = ( PIMAGE_DOS_HEADER )base;
+    _IMAGE_DOS_HEADER* dosHeader = ( _IMAGE_DOS_HEADER* )base;
     if ( dosHeader->e_magic != 0x5A4D ) return uintptr_t{ 0 };
 
-    PIMAGE_NT_HEADERS ntHeaders = ( PIMAGE_NT_HEADERS )( ( PUCHAR )base + dosHeader->e_lfanew );
+    _IMAGE_NT_HEADERS64* ntHeaders = ( _IMAGE_NT_HEADERS64* )( ( PUCHAR )base + dosHeader->e_lfanew );
     if ( ntHeaders->Signature != 0x00004550 ) return uintptr_t{ 0 };
 
     DWORD exportVA = ntHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
@@ -140,11 +140,11 @@ UINTN modules::IpiBroadcastCallback(_In_ UINTN Argument){
 }
 
 
-uintptr_t modules::find_base_from_exception( uintptr_t search_addr, size_t search_limit, uintptr_t& base, size_t& base_size ) {
+uintptr_t modules::find_base_from_exception( uintptr_t search_addr, size_t search_limit, uintptr_t &base, size_t& base_size ) {
     for ( size_t offset = 0; offset < search_limit; offset += 0x1000 ) {
         uintptr_t currentAddress = search_addr - offset;
 
-        PIMAGE_DOS_HEADER dosHeader = reinterpret_cast< PIMAGE_DOS_HEADER >( currentAddress );
+        _IMAGE_DOS_HEADER* dosHeader = reinterpret_cast< _IMAGE_DOS_HEADER* >( currentAddress );
 
         if ( dosHeader->e_magic == 0x5A4D ) {
             PIMAGE_NT_HEADERS64 ntHeaders = reinterpret_cast< PIMAGE_NT_HEADERS64 >( currentAddress + dosHeader->e_lfanew );
@@ -154,8 +154,13 @@ uintptr_t modules::find_base_from_exception( uintptr_t search_addr, size_t searc
                 && ntHeaders->OptionalHeader.SizeOfImage >= 0x100000 
                 && ntHeaders->FileHeader.NumberOfSections >= 20 ) {
                 base_size = ntHeaders->OptionalHeader.SizeOfImage;
-                base = currentAddress;
+                base = currentAddress; 
                 return currentAddress;
+            }
+            else
+            {
+                DbgPrint( "failed" );
+                return { 0 };
             }
         }
     }

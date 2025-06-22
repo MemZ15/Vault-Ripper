@@ -148,3 +148,4 @@ uintptr_t helpers::GetProcAddress( void* hModule, const wchar_t* wAPIName )
     }
     return 0;
 }
+

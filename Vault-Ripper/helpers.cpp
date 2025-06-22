@@ -5,11 +5,11 @@
 /*https://learn.microsoft.com/en-us/cpp/intrinsics/disable?view=msvc-170  */
 
 uintptr_t helpers::store_idr( IDTR* idtr ) {
-	_disable();
-	__sidt( idtr );
-	_enable();
+    _disable();
+    __sidt( idtr );
+    _enable();
 
-	return uintptr_t{ 0 };
+    return uintptr_t{ 0 };
 }
 
 uintptr_t helpers::find_isr_address( PSIMPLE_IDTENTRY64 idt_entry ){

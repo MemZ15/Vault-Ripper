@@ -104,7 +104,7 @@ seCiCallbacks_swap modules::get_CIValidate_ImageHeaderEntry() {
 
     DWORD64 zwFlushInstructionCache = ( DWORD64 )helpers::GetProcAddress( usermode_load_va, L"ZwFlushInstructionCache" ) - uNtAddr + mod_base;
 
-    DWORD64 ciValidateImageHeaderEntry = kernelAddress + 0x20; // Offset 0x20: Entry point of CiValidateImageHeader within ci.dll (used by nt!SeValidateImageHeader for signature checks)
+    DWORD64 ciValidateImageHeaderEntry = kernelAddress + 0x20; // Offset 0x20: Entry point of CiValidateImageHeader within ci.dll (nt!SeValidateImageHeader)
 
     return seCiCallbacks_swap{ ciValidateImageHeaderEntry, zwFlushInstructionCache };
 }

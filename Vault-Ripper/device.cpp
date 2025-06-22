@@ -6,37 +6,6 @@
 ob_type_hook_pair device;
 
 
-NTSTATUS __fastcall object_type_init_hooks::hk_device_parse_procedure_ex( IN PVOID ParseObject,
-    IN PVOID ObjectType,
-    IN OUT PACCESS_STATE AccessState,
-    IN KPROCESSOR_MODE AccessMode,
-    IN ULONG Attributes,
-    IN OUT PUNICODE_STRING CompleteName,
-    IN OUT PUNICODE_STRING RemainingName,
-    IN OUT PVOID Context,
-    IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
-    OUT PVOID* Object )
-{
-
-    auto devObj = reinterpret_cast< PDEVICE_OBJECT* >( ObjectType );
-
-    DbgPrint( "Invoked" );
-
-    return STATUS_SUCCESS;
-}
-
-bool bdeviceHijacked = false;
-
-NTSTATUS __fastcall object_type_init_hooks::hk_device_open_procedure( e_ob_open_reason open_reason, uint8_t access_mode, PEPROCESS process, PEPROCESS object_body, unsigned int* granted_access, unsigned long handle_count )
-{
-    if ( !bdeviceHijacked )
-        DbgPrint( "device open proc INVOKED" );
-
-    bdeviceHijacked = true;
-
-    return hook_metadata.process.o_open_procedure( open_reason, access_mode, process, object_body, granted_access, handle_count );
-
-}
 
 
 

@@ -48,7 +48,6 @@ typedef struct func_pointer_table {
     ExFreePoolWithTag_t                 ExFreePoolWithTag;
 
     uintptr_t                           ObTypeIndexTable;
-    PHAL_PRIVATE_DISPATCH               HalTable;
     IoThreadToProcess_t                 IoThreadToProcess;
 
 } pointer_table, * _pointer_table;
@@ -62,7 +61,7 @@ struct HookEntry {
 };
 
 namespace test {
-    _OBJECT_TYPE* capture_initalizer_table( uintptr_t base, size_t size, pointer_table& table_handle, void* obj, bool should_hook );
+    _OBJECT_TYPE* capture_initalizer_table( uintptr_t* base, size_t size, pointer_table& table_handle, void* obj, bool should_hook );
 }
 
 namespace mngr {
@@ -78,7 +77,7 @@ namespace mngr {
         private:
             uintptr_t ob_type_index_table{ 0 };
 
-            static const int hook_count = 7; // static # of hooks to iterate on
+            static const int hook_count = 2; // static # of hooks to iterate on
 
             HookEntry hooks[hook_count];
 
